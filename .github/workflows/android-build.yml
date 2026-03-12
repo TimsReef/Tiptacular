@@ -32,6 +32,9 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Create Assets
+        run: npx capacitor-assets generate --android
+
       - name: Setup Java and Android SDK
         uses: actions/setup-java@v4
         with:
