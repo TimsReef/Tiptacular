@@ -53,7 +53,6 @@ jobs:
       - name: Prepare Android Logs
         if: always()
         run: |
-#          VERSION=$(node -p "require('./package.json').version")
           VERSION=$(jq -r '.version' package.json)
           LOG_NAME="android-build-v${VERSION}-logs.txt"
           mv android_build.log "$LOG_NAME"
@@ -64,10 +63,9 @@ jobs:
         if: steps.android_build.outcome == 'success'
         run: |
           # 1. Extract app name and version from package.json
+          # tr -dc '[:alnum:]' removes spaces and special characters for a safe filename
           APP_NAME=$(jq -r '.name' package.json | tr -dc '[:alnum:]\n\r')
           VERSION=$(jq -r '.version' package.json)
-#          APP_NAME=$(node -p "require('./package.json').appName")
-#          VERSION=$(node -p "require('./package.json').version")
           NEW_FILENAME="${APP_NAME}-v${VERSION}.apk"
 
           # 2. Find the generated APK (handles name variations like 'app-release-unsigned.apk')
