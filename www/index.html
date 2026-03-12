@@ -8,20 +8,22 @@
 <style>
 
 :root{
---accent:#38bdf8;
---radius:26px;
+--accent:#2563eb;
+--radius:22px;
+--shadow:0 12px 30px rgba(0,0,0,.12);
 }
 
-/* LIGHT MODE */
+/* LIGHT MODE (more polished) */
 @media (prefers-color-scheme: light){
 :root{
---bg1:#eef2f7;
---bg2:#e3e8f0;
+--bg1:#f6f8fb;
+--bg2:#eef2f7;
 --text:#0f172a;
---muted:#475569;
---card:rgba(255,255,255,0.75);
---button:rgba(255,255,255,0.9);
---key:rgba(255,255,255,0.95);
+--muted:#64748b;
+--card:#ffffff;
+--key:#ffffff;
+--button:#f1f5f9;
+--border:#e2e8f0;
 }
 }
 
@@ -29,12 +31,14 @@
 @media (prefers-color-scheme: dark){
 :root{
 --bg1:#0f172a;
---bg2:#1e293b;
---text:#ffffff;
---muted:rgba(255,255,255,0.6);
---card:rgba(255,255,255,0.08);
---button:rgba(255,255,255,0.1);
---key:rgba(255,255,255,0.1);
+--bg2:#020617;
+--text:#f1f5f9;
+--muted:#94a3b8;
+--card:#111827;
+--key:#1f2937;
+--button:#1e293b;
+--border:#334155;
+--shadow:0 16px 40px rgba(0,0,0,.6);
 }
 }
 
@@ -43,7 +47,7 @@
 body{
 margin:0;
 font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-background:linear-gradient(160deg,var(--bg1),var(--bg2));
+background:linear-gradient(180deg,var(--bg1),var(--bg2));
 color:var(--text);
 display:flex;
 justify-content:center;
@@ -58,23 +62,22 @@ max-width:420px;
 .header{
 font-size:28px;
 font-weight:700;
-margin:10px 4px 18px 4px;
-letter-spacing:.4px;
+margin:12px 6px 18px;
 }
 
 .card{
 background:var(--card);
-backdrop-filter:blur(20px);
 border-radius:var(--radius);
 padding:20px;
-box-shadow:0 20px 40px rgba(0,0,0,0.25);
-margin-bottom:18px;
+box-shadow:var(--shadow);
+margin-bottom:16px;
+border:1px solid var(--border);
 }
 
 .display{
 font-size:46px;
 font-weight:700;
-letter-spacing:1px;
+letter-spacing:.5px;
 margin-bottom:14px;
 text-align:right;
 }
@@ -87,14 +90,14 @@ margin-top:6px;
 
 .control{
 flex:1;
-background:rgba(255,255,255,0.06);
-border-radius:16px;
+background:var(--button);
+border-radius:14px;
 padding:10px;
 text-align:center;
 }
 
 .control-title{
-font-size:13px;
+font-size:12px;
 color:var(--muted);
 }
 
@@ -111,23 +114,23 @@ display:flex;
 .control-buttons button{
 flex:1;
 border:none;
-background:var(--button);
+background:var(--card);
 color:var(--text);
 border-radius:10px;
 margin:3px;
 padding:6px;
 font-size:18px;
-transition:transform .08s, background .2s;
+box-shadow:0 2px 6px rgba(0,0,0,.08);
 }
 
 .control-buttons button:active{
-transform:scale(.9);
+transform:scale(.92);
 }
 
 .tip-selector{
 display:flex;
 gap:8px;
-margin-top:10px;
+margin-top:12px;
 }
 
 .tip-btn{
@@ -142,21 +145,63 @@ font-size:14px;
 
 .tip-btn.active{
 background:var(--accent);
-color:black;
+color:#fff;
 font-weight:600;
 }
 
 .results .row{
 display:flex;
 justify-content:space-between;
-padding:8px 2px;
+padding:10px 2px;
 font-size:17px;
+border-bottom:1px solid var(--border);
+}
+
+.results .row:last-child{
+border-bottom:none;
 }
 
 .results .total{
-font-size:21px;
+font-size:22px;
 font-weight:700;
-margin-top:6px;
+}
+
+.round-row{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:12px;
+font-size:14px;
+}
+
+.round-toggle{
+width:44px;
+height:24px;
+border-radius:20px;
+background:#cbd5f5;
+position:relative;
+cursor:pointer;
+}
+
+.round-toggle::after{
+content:"";
+position:absolute;
+width:18px;
+height:18px;
+border-radius:50%;
+background:white;
+top:3px;
+left:4px;
+transition:.25s;
+box-shadow:0 2px 4px rgba(0,0,0,.3);
+}
+
+.round-toggle.active{
+background:var(--accent);
+}
+
+.round-toggle.active::after{
+left:22px;
 }
 
 .keypad{
@@ -167,24 +212,23 @@ gap:14px;
 
 .key{
 border:none;
-border-radius:22px;
+border-radius:20px;
 padding:18px 0;
 font-size:26px;
 background:var(--key);
 color:var(--text);
-box-shadow:0 10px 20px rgba(0,0,0,0.25);
-transition:transform .08s, background .2s;
+box-shadow:var(--shadow);
 }
 
 .key:active{
-transform:scale(.9);
+transform:scale(.92);
 }
 
 .swipe-hint{
 text-align:center;
 font-size:12px;
 color:var(--muted);
-margin-top:6px;
+margin-top:8px;
 }
 
 </style>
@@ -248,6 +292,11 @@ margin-top:6px;
 <span id="splitAmount">$0.00</span>
 </div>
 
+<div class="round-row">
+<span>Round Total</span>
+<div id="roundToggle" class="round-toggle" onclick="toggleRound()"></div>
+</div>
+
 </div>
 
 <div class="keypad">
@@ -277,6 +326,7 @@ margin-top:6px;
 let input="";
 let people=1;
 let tipPercent=18;
+let roundTotal=false;
 
 function haptic(){
 if(navigator.vibrate) navigator.vibrate(10);
@@ -298,6 +348,12 @@ update();
 function clearInput(){
 input="";
 haptic();
+update();
+}
+
+function toggleRound(){
+roundTotal=!roundTotal;
+document.getElementById('roundToggle').classList.toggle('active',roundTotal);
 update();
 }
 
@@ -336,6 +392,12 @@ function update(){
 let subtotal=parseFloat(input||0);
 let tip=subtotal*(tipPercent/100);
 let total=subtotal+tip;
+
+if(roundTotal){
+total=Math.ceil(total);
+tip=total-subtotal;
+}
+
 let split=total/people;
 
 format(subtotal,'subtotalDisplay');
