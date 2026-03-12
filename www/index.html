@@ -9,11 +9,11 @@
 
 :root{
 --accent:#2563eb;
---radius:22px;
---shadow:0 12px 30px rgba(0,0,0,.12);
+--radius:18px;
+--shadow:0 8px 20px rgba(0,0,0,.12);
 }
 
-/* LIGHT MODE (more polished) */
+/* LIGHT MODE */
 @media (prefers-color-scheme: light){
 :root{
 --bg1:#f6f8fb;
@@ -38,73 +38,89 @@
 --key:#1f2937;
 --button:#1e293b;
 --border:#334155;
---shadow:0 16px 40px rgba(0,0,0,.6);
+--shadow:0 10px 30px rgba(0,0,0,.6);
 }
 }
 
 *{box-sizing:border-box}
 
-body{
+html,body{
+height:100%;
 margin:0;
 font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 background:linear-gradient(180deg,var(--bg1),var(--bg2));
 color:var(--text);
+overflow:hidden;
+}
+
+body{
 display:flex;
 justify-content:center;
-padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
 }
 
 .app{
 width:100%;
-max-width:420px;
+max-width:520px;
+height:100vh;
+display:flex;
+flex-direction:column;
+padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
+gap:10px;
 }
 
 .header{
-font-size:28px;
+font-size:22px;
 font-weight:700;
-margin:12px 6px 18px;
+padding:0 6px;
+flex-shrink:0;
+}
+
+.main{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:10px;
+min-height:0;
 }
 
 .card{
 background:var(--card);
 border-radius:var(--radius);
-padding:20px;
+padding:14px;
 box-shadow:var(--shadow);
-margin-bottom:16px;
 border:1px solid var(--border);
 }
 
 .display{
-font-size:46px;
+font-size:36px;
 font-weight:700;
 letter-spacing:.5px;
-margin-bottom:14px;
 text-align:right;
+margin-bottom:8px;
 }
 
 .controls{
 display:flex;
-gap:12px;
-margin-top:6px;
+gap:8px;
 }
 
 .control{
 flex:1;
 background:var(--button);
-border-radius:14px;
-padding:10px;
+border-radius:12px;
+padding:8px;
 text-align:center;
 }
 
 .control-title{
-font-size:12px;
+font-size:11px;
 color:var(--muted);
 }
 
 .control-value{
-font-size:20px;
+font-size:18px;
 font-weight:600;
-margin:6px 0;
+margin:4px 0;
 }
 
 .control-buttons{
@@ -116,21 +132,16 @@ flex:1;
 border:none;
 background:var(--card);
 color:var(--text);
-border-radius:10px;
-margin:3px;
-padding:6px;
-font-size:18px;
-box-shadow:0 2px 6px rgba(0,0,0,.08);
-}
-
-.control-buttons button:active{
-transform:scale(.92);
+border-radius:8px;
+margin:2px;
+padding:4px;
+font-size:16px;
 }
 
 .tip-selector{
 display:flex;
-gap:8px;
-margin-top:12px;
+gap:6px;
+margin-top:8px;
 }
 
 .tip-btn{
@@ -138,9 +149,9 @@ flex:1;
 border:none;
 background:var(--button);
 color:var(--text);
-padding:8px 0;
-border-radius:12px;
-font-size:14px;
+padding:6px 0;
+border-radius:10px;
+font-size:12px;
 }
 
 .tip-btn.active{
@@ -149,51 +160,55 @@ color:#fff;
 font-weight:600;
 }
 
-.results .row{
-display:flex;
-justify-content:space-between;
-padding:10px 2px;
-font-size:17px;
-border-bottom:1px solid var(--border);
+.results{
+display:grid;
+grid-template-columns:1fr 1fr;
+row-gap:6px;
+column-gap:12px;
+font-size:15px;
 }
 
-.results .row:last-child{
-border-bottom:none;
+.results .label{
+color:var(--muted);
+}
+
+.results .value{
+text-align:right;
+font-weight:600;
 }
 
 .results .total{
-font-size:22px;
+font-size:18px;
 font-weight:700;
 }
 
 .round-row{
+grid-column:span 2;
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-top:12px;
-font-size:14px;
+margin-top:4px;
+font-size:13px;
 }
 
 .round-toggle{
-width:44px;
-height:24px;
+width:42px;
+height:22px;
 border-radius:20px;
 background:#cbd5f5;
 position:relative;
-cursor:pointer;
 }
 
 .round-toggle::after{
 content:"";
 position:absolute;
-width:18px;
-height:18px;
+width:16px;
+height:16px;
 border-radius:50%;
 background:white;
 top:3px;
-left:4px;
+left:3px;
 transition:.25s;
-box-shadow:0 2px 4px rgba(0,0,0,.3);
 }
 
 .round-toggle.active{
@@ -201,20 +216,20 @@ background:var(--accent);
 }
 
 .round-toggle.active::after{
-left:22px;
+left:23px;
 }
 
 .keypad{
+flex:1;
 display:grid;
 grid-template-columns:repeat(3,1fr);
-gap:14px;
+gap:8px;
 }
 
 .key{
 border:none;
-border-radius:20px;
-padding:18px 0;
-font-size:26px;
+border-radius:16px;
+font-size:24px;
 background:var(--key);
 color:var(--text);
 box-shadow:var(--shadow);
@@ -226,9 +241,35 @@ transform:scale(.92);
 
 .swipe-hint{
 text-align:center;
-font-size:12px;
+font-size:11px;
 color:var(--muted);
-margin-top:8px;
+}
+
+/* LANDSCAPE MODE */
+@media (orientation: landscape){
+
+.main{
+flex-direction:row;
+}
+
+.left-panel{
+flex:1.1;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.right-panel{
+flex:1;
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+.keypad{
+height:100%;
+}
+
 }
 
 </style>
@@ -239,6 +280,10 @@ margin-top:8px;
 <div class="app" id="app">
 
 <div class="header">Tip Calculator</div>
+
+<div class="main">
+
+<div class="left-panel">
 
 <div class="card">
 
@@ -277,20 +322,14 @@ margin-top:8px;
 
 <div class="card results">
 
-<div class="row">
-<span>Tip</span>
-<span id="tipAmount">$0.00</span>
-</div>
+<div class="label">Tip</div>
+<div id="tipAmount" class="value">$0.00</div>
 
-<div class="row total">
-<span>Total</span>
-<span id="totalAmount">$0.00</span>
-</div>
+<div class="label total">Total</div>
+<div id="totalAmount" class="value total">$0.00</div>
 
-<div class="row">
-<span>Per Person</span>
-<span id="splitAmount">$0.00</span>
-</div>
+<div class="label">Per Person</div>
+<div id="splitAmount" class="value">$0.00</div>
 
 <div class="round-row">
 <span>Round Total</span>
@@ -298,6 +337,10 @@ margin-top:8px;
 </div>
 
 </div>
+
+</div>
+
+<div class="right-panel">
 
 <div class="keypad">
 <button class="key" onclick="press('1')">1</button>
@@ -318,6 +361,10 @@ margin-top:8px;
 </div>
 
 <div class="swipe-hint">Swipe left anywhere to clear</div>
+
+</div>
+
+</div>
 
 </div>
 
