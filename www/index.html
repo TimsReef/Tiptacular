@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Tip Calculator</title>
+
+<style>
+
+:root{
+--accent:#38bdf8;
+--radius:26px;
+}
+
+/* LIGHT MODE */
+@media (prefers-color-scheme: light){
+:root{
+--bg1:#eef2f7;
+--bg2:#e3e8f0;
+--text:#0f172a;
+--muted:#475569;
+--card:rgba(255,255,255,0.75);
+--button:rgba(255,255,255,0.9);
+--key:rgba(255,255,255,0.95);
+}
+}
+
+/* DARK MODE */
+@media (prefers-color-scheme: dark){
+:root{
+--bg1:#0f172a;
+--bg2:#1e293b;
+--text:#ffffff;
+--muted:rgba(255,255,255,0.6);
+--card:rgba(255,255,255,0.08);
+--button:rgba(255,255,255,0.1);
+--key:rgba(255,255,255,0.1);
+}
+}
+
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+background:linear-gradient(160deg,var(--bg1),var(--bg2));
+color:var(--text);
+display:flex;
+justify-content:center;
+padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom);
+}
+
+.app{
+width:100%;
+max-width:420px;
+}
+
+.header{
+font-size:28px;
+font-weight:700;
+margin:10px 4px 18px 4px;
+letter-spacing:.4px;
+}
+
+.card{
+background:var(--card);
+backdrop-filter:blur(20px);
+border-radius:var(--radius);
+padding:20px;
+box-shadow:0 20px 40px rgba(0,0,0,0.25);
+margin-bottom:18px;
+}
+
+.display{
+font-size:46px;
+font-weight:700;
+letter-spacing:1px;
+margin-bottom:14px;
+text-align:right;
+}
+
+.controls{
+display:flex;
+gap:12px;
+margin-top:6px;
+}
+
+.control{
+flex:1;
+background:rgba(255,255,255,0.06);
+border-radius:16px;
+padding:10px;
+text-align:center;
+}
+
+.control-title{
+font-size:13px;
+color:var(--muted);
+}
+
+.control-value{
+font-size:20px;
+font-weight:600;
+margin:6px 0;
+}
+
+.control-buttons{
+display:flex;
+}
+
+.control-buttons button{
+flex:1;
+border:none;
+background:var(--button);
+color:var(--text);
+border-radius:10px;
+margin:3px;
+padding:6px;
+font-size:18px;
+transition:transform .08s, background .2s;
+}
+
+.control-buttons button:active{
+transform:scale(.9);
+}
+
+.tip-selector{
+display:flex;
+gap:8px;
+margin-top:10px;
+}
+
+.tip-btn{
+flex:1;
+border:none;
+background:var(--button);
+color:var(--text);
+padding:8px 0;
+border-radius:12px;
+font-size:14px;
+}
+
+.tip-btn.active{
+background:var(--accent);
+color:black;
+font-weight:600;
+}
+
+.results .row{
+display:flex;
+justify-content:space-between;
+padding:8px 2px;
+font-size:17px;
+}
+
+.results .total{
+font-size:21px;
+font-weight:700;
+margin-top:6px;
+}
+
+.keypad{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:14px;
+}
+
+.key{
+border:none;
+border-radius:22px;
+padding:18px 0;
+font-size:26px;
+background:var(--key);
+color:var(--text);
+box-shadow:0 10px 20px rgba(0,0,0,0.25);
+transition:transform .08s, background .2s;
+}
+
+.key:active{
+transform:scale(.9);
+}
+
+.swipe-hint{
+text-align:center;
+font-size:12px;
+color:var(--muted);
+margin-top:6px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="app" id="app">
+
+<div class="header">Tip Calculator</div>
+
+<div class="card">
+
+<div id="subtotalDisplay" class="display">$0.00</div>
+
+<div class="controls">
+
+<div class="control">
+<div class="control-title">People</div>
+<div id="people" class="control-value">1</div>
+<div class="control-buttons">
+<button onclick="changePeople(1)">＋</button>
+<button onclick="changePeople(-1)">−</button>
+</div>
+</div>
+
+<div class="control">
+<div class="control-title">Tip</div>
+<div id="tipPercent" class="control-value">18%</div>
+<div class="control-buttons">
+<button onclick="changeTip(1)">＋</button>
+<button onclick="changeTip(-1)">−</button>
+</div>
+</div>
+
+</div>
+
+<div class="tip-selector">
+<button class="tip-btn" onclick="setTip(15)">15%</button>
+<button class="tip-btn active" onclick="setTip(18)">18%</button>
+<button class="tip-btn" onclick="setTip(20)">20%</button>
+<button class="tip-btn" onclick="setTip(25)">25%</button>
+</div>
+
+</div>
+
+<div class="card results">
+
+<div class="row">
+<span>Tip</span>
+<span id="tipAmount">$0.00</span>
+</div>
+
+<div class="row total">
+<span>Total</span>
+<span id="totalAmount">$0.00</span>
+</div>
+
+<div class="row">
+<span>Per Person</span>
+<span id="splitAmount">$0.00</span>
+</div>
+
+</div>
+
+<div class="keypad">
+<button class="key" onclick="press('1')">1</button>
+<button class="key" onclick="press('2')">2</button>
+<button class="key" onclick="press('3')">3</button>
+
+<button class="key" onclick="press('4')">4</button>
+<button class="key" onclick="press('5')">5</button>
+<button class="key" onclick="press('6')">6</button>
+
+<button class="key" onclick="press('7')">7</button>
+<button class="key" onclick="press('8')">8</button>
+<button class="key" onclick="press('9')">9</button>
+
+<button class="key" onclick="press('.')">.</button>
+<button class="key" onclick="press('0')">0</button>
+<button class="key" onclick="backspace()">⌫</button>
+</div>
+
+<div class="swipe-hint">Swipe left anywhere to clear</div>
+
+</div>
+
+<script>
+
+let input="";
+let people=1;
+let tipPercent=18;
+
+function haptic(){
+if(navigator.vibrate) navigator.vibrate(10);
+}
+
+function press(v){
+if(v==='.' && input.includes('.')) return;
+input+=v;
+haptic();
+update();
+}
+
+function backspace(){
+input=input.slice(0,-1);
+haptic();
+update();
+}
+
+function clearInput(){
+input="";
+haptic();
+update();
+}
+
+function changePeople(v){
+people=Math.max(1,people+v);
+document.getElementById('people').innerText=people;
+haptic();
+update();
+}
+
+function changeTip(v){
+tipPercent=Math.max(0,tipPercent+v);
+document.getElementById('tipPercent').innerText=tipPercent+"%";
+highlightTip();
+haptic();
+update();
+}
+
+function setTip(v){
+tipPercent=v;
+document.getElementById('tipPercent').innerText=v+"%";
+highlightTip();
+haptic();
+update();
+}
+
+function highlightTip(){
+document.querySelectorAll('.tip-btn').forEach(b=>{
+b.classList.remove('active');
+if(b.innerText===tipPercent+'%') b.classList.add('active');
+});
+}
+
+function update(){
+
+let subtotal=parseFloat(input||0);
+let tip=subtotal*(tipPercent/100);
+let total=subtotal+tip;
+let split=total/people;
+
+format(subtotal,'subtotalDisplay');
+format(tip,'tipAmount');
+format(total,'totalAmount');
+format(split,'splitAmount');
+
+}
+
+function format(v,id){
+let el=document.getElementById(id);
+el.innerText=v.toLocaleString(undefined,{style:'currency',currency:'USD'});
+}
+
+let startX=null;
+
+document.getElementById('app').addEventListener('touchstart',e=>{
+startX=e.touches[0].clientX;
+});
+
+document.getElementById('app').addEventListener('touchend',e=>{
+if(startX===null) return;
+
+let endX=e.changedTouches[0].clientX;
+let diff=startX-endX;
+
+if(diff>120){
+clearInput();
+}
+
+startX=null;
+});
+
+</script>
+
+</body>
+</html>

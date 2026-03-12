@@ -1,0 +1,91 @@
+name: Android APK Build
+
+on:
+  release:
+    types: [published] # This triggers the workflow when a release is published
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create/update releases
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: '25.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Capacitor
+        run: npm install @capacitor/core @capacitor/cli
+
+      - name: Prebuild Android
+        run npx cap add android
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Build Release APK
+        id: android_build
+        continue-on-error: true
+        # Runs the native Gradle build command
+        run: |
+          # Create a clean log file
+          touch android_build.log
+        
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleRelease --stacktrace 2>&1 | tee ../android_build.log
+
+      - name: Prepare Android Logs
+        if: always()
+        run: |
+          VERSION=$(jq -r '.expo.version' app.json)
+          LOG_NAME="android-build-v${VERSION}-logs.txt"
+          mv android_build.log "$LOG_NAME"
+          echo "ANDROID_LOG=$LOG_NAME" >> $GITHUB_ENV
+
+      - name: Rename and Prepare APK
+        id: rename_apk
+        if: steps.android_build.outcome == 'success'
+        run: |
+          # 1. Extract app name and version from package.json
+          APP_NAME=$(node -p "require('./package.json').appName")
+          VERSION=$(node -p "require('./package.json').version")
+          NEW_FILENAME="${APP_NAME}-v${VERSION}.apk"
+
+          # 2. Find the generated APK (handles name variations like 'app-release-unsigned.apk')
+          ORIGINAL_APK=$(ls android/app/build/outputs/apk/release/*.apk | head -n 1)
+          
+          # 3. Move/Rename the APK to the root workspace for easy access
+          mv "$ORIGINAL_APK" "$NEW_FILENAME"
+          
+          # 4. Save the filename to the environment for the next step
+          echo "ANDROID_APK=$NEW_FILENAME" >> $GITHUB_ENV
+          echo "Created APK: $NEW_FILENAME"
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        if: always() && startsWith(github.ref, 'refs/tags/')
+        with:
+          # Uses the environment variable from the previous step
+          files: |
+            ${{ env.ANDROID_APK }}
+            ${{ env.ANDROID_LOG }}
+          generate_release_notes: true
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
