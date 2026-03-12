@@ -38,9 +38,6 @@ jobs:
           java-version: '17' # Ensure compatibility with the Android Gradle Plugin version
           distribution: 'temurin'
       
-      - name: Setup Android NDK
-        uses: android-ndk/setup-ndk@v1 # Optional, if your app needs NDK
-
       - name: Build Release APK
         id: android_build
         continue-on-error: true
