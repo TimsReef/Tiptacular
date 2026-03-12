@@ -23,8 +23,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Capacitor
-        run: npm install @capacitor/core @capacitor/cli
+#      - name: Install Capacitor
+#        run: npm install @capacitor/core @capacitor/cli
 
       - name: Prebuild Android
         run: npx cap add android
@@ -33,10 +33,10 @@ jobs:
         run: npx cap sync android
 
       - name: Setup Java and Android SDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          java-version: '17' # Ensure compatibility with the Android Gradle Plugin version
           distribution: 'temurin'
+          java-version: '21'
       
       - name: Build Release APK
         id: android_build
