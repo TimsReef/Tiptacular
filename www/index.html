@@ -388,7 +388,18 @@ let tipPercent=18;
 let roundTotal=false;
 
 function haptic(){
-if(navigator.vibrate) navigator.vibrate(10);
+// Prefer native Capacitor haptics when available
+try{
+if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics){
+Capacitor.Plugins.Haptics.impact({ style: 'light' });
+return;
+}
+}catch(e){}
+
+// Fallback for mobile browsers
+if(navigator.vibrate){
+navigator.vibrate(10);
+}
 }
 
 function press(v){
