@@ -261,6 +261,8 @@ flex-direction:row;
 }
 
 .left-panel{
+flex:1;
+min-height:0;
 flex:1.1;
 display:flex;
 flex-direction:column;
@@ -268,6 +270,10 @@ gap:10px;
 }
 
 .right-panel{
+flex:1;
+display:flex;
+flex-direction:column;
+min-height:0;
 flex:1;
 display:flex;
 flex-direction:column;
@@ -388,10 +394,20 @@ let tipPercent=18;
 let roundTotal=false;
 
 function haptic(){
-// Prefer native Capacitor haptics when available
+// Very light haptic similar to native calculator taps
 try{
 if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics){
-Capacitor.Plugins.Haptics.impact({ style: 'light' });
+Capacitor.Plugins.Haptics.selectionStart();
+Capacitor.Plugins.Haptics.selectionEnd();
+return;
+}
+}catch(e){}
+
+// Softer browser fallback
+if(navigator.vibrate){
+navigator.vibrate(5);
+}
+});
 return;
 }
 }catch(e){}
