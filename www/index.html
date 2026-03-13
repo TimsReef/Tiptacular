@@ -224,9 +224,10 @@ flex:1;
 display:grid;
 grid-template-columns:repeat(3,1fr);
 grid-auto-rows:1fr;
-height:100%;
 width:100%;
+height:100%;
 gap:8px;
+align-content:stretch;
 }
 
 .key{
@@ -237,10 +238,18 @@ background:var(--key);
 color:var(--text);
 box-shadow:var(--shadow);
 width:100%;
-height:100%;
+aspect-ratio:1 / 1;
 display:flex;
 align-items:center;
 justify-content:center;
+}
+
+/* If vertical space is larger than width (portrait phones), allow keys to stretch slightly */
+@media (orientation: portrait){
+.key{
+height:100%;
+aspect-ratio:auto;
+}
 }
 
 .key:active{
