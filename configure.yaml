@@ -9,6 +9,9 @@ platforms:
   android:
     manifest:
       - file: AndroidManifest.xml
-        inject:
-          - <uses-permission android:name="android.permission.CAMERA" />
-          - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+        target: manifest
+        merge: |
+          <manifest>
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+          </manifest>
