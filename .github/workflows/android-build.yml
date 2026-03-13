@@ -26,11 +26,14 @@ jobs:
       - name: Prebuild Android
         run: npx cap add android
 
-      - name: Sync Capacitor
-        run: npx cap sync android
-
       - name: Create Assets
         run: npx capacitor-assets generate --android
+
+      - name: Android Configuration Settings
+        run: npx trapese run configure.yaml --android-project android
+
+      - name: Sync Capacitor
+        run: npx cap sync android
 
       - name: Setup Java and Android SDK
         uses: actions/setup-java@v4
