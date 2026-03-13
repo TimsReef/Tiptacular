@@ -561,24 +561,6 @@ function toggleTheme(){
     document.getElementById('themeBtn').innerText = '🌙';
   }
 }
-  else{
-    manualTheme = 'dark';
-    body.classList.remove('light');
-    body.classList.add('dark');
-    document.getElementById('themeBtn').innerText = '🌙';
-  }
-}
-  else if(manualTheme === 'light'){
-    manualTheme = null;
-    root.style.colorScheme = '';
-    document.getElementById('themeBtn').innerText = '🌙';
-  }
-  else{
-    manualTheme = 'dark';
-    root.style.colorScheme = 'dark';
-    document.getElementById('themeBtn').innerText = '🌙';
-  }
-}
 
 // -----------------------------
 // Keypad Input
