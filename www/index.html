@@ -275,6 +275,7 @@ flex-shrink:0;
 Tip Calculator
 </span>
 <div class="header-actions">
+<button class="icon-btn" id="cameraBtn" onclick="captureReceipt()">📷</button>
 <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
 <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🫧</button>
 </div>
@@ -641,6 +642,108 @@ app.addEventListener('touchend',e=>{
 });
 
 update();
+
+// -----------------------------
+// Receipt Camera OCR (On-device)
+// -----------------------------
+
+async function captureReceipt(){
+ try{
+  const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+
+  const video=document.createElement('video');
+  video.style.position='fixed';
+  video.style.top='0';
+  video.style.left='0';
+  video.style.width='100%';
+  video.style.height='100%';
+  video.style.objectFit='cover';
+  video.style.zIndex='9999';
+
+  document.body.appendChild(video);
+
+  video.srcObject=stream;
+  await video.play();
+
+  video.addEventListener('click',async ()=>{
+
+   const canvas=document.createElement('canvas');
+   canvas.width=video.videoWidth;
+   canvas.height=video.videoHeight;
+
+   const ctx=canvas.getContext('2d');
+   ctx.drawImage(video,0,0);
+
+   stream.getTracks().forEach(t=>t.stop());
+   video.remove();
+
+   processReceipt(canvas);
+
+  },{once:true});
+
+ }catch(err){
+  alert('Camera unavailable');
+ }
+}
+
+async function processReceipt(canvas){
+ try{
+
+  if(!window.Tesseract){
+   await loadOCR();
+  }
+
+  const worker = await Tesseract.createWorker('eng');
+  const { data:{ text } } = await worker.recognize(canvas);
+  await worker.terminate();
+
+  const total=findReceiptTotal(text);
+
+  if(total){
+   inputRaw=String(total);
+   update();
+   alert('Detected total: $'+total);
+  }else{
+   alert('Could not detect receipt total');
+  }
+
+ }catch(e){
+  console.error(e);
+  alert('OCR failed');
+ }
+}
+
+async function loadOCR(){
+ return new Promise((resolve)=>{
+  const s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+  s.onload=resolve;
+  document.head.appendChild(s);
+ });
+}
+
+function findReceiptTotal(text){
+
+ const lines=text.split('\n');
+ let candidates=[];
+
+ for(const line of lines){
+  const lower=line.toLowerCase();
+
+  if(lower.includes('total')||lower.includes('amount')||lower.includes('balance')){
+   const match=line.match(/(\d+\.\d{2})/);
+   if(match) candidates.push(parseFloat(match[1]));
+  }
+ }
+
+ if(candidates.length===0){
+  const fallback=text.match(/(\d+\.\d{2})/g);
+  if(!fallback) return null;
+  return Math.max(...fallback.map(v=>parseFloat(v)));
+ }
+
+ return Math.max(...candidates);
+}
 
 </script>
 
