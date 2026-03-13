@@ -416,16 +416,34 @@ const tipPercentDisplay = document.getElementById('tipPercent');
 const roundToggle = document.getElementById('roundToggle');
 
 // -----------------------------
-// Haptic Feedback
+// Key Click Sound Feedback
 // -----------------------------
+let audioCtx = null;
+
 function haptic(){
-  try {
-    if (window.Capacitor?.Plugins?.Haptics) {
-      // lightest native feedback
-      Capacitor.Plugins.Haptics.selectionStart();
-      Capacitor.Plugins.Haptics.selectionEnd();
-      return;
+  try{
+    if(!audioCtx){
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = 'square';
+    osc.frequency.value = 1200; // light key click pitch
+
+    gain.gain.value = 0.03; // very soft volume
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.02); // very short click
+
+  }catch(e){
+    // fail silently if audio unavailable
+  }
+}
   } catch(e){}
 
   if (navigator.vibrate) {
