@@ -6,11 +6,26 @@
 <title>Tip Calculator</title>
 
 <style>
-
 :root{
 --accent:#2563eb;
 --radius:18px;
 --shadow:0 8px 20px rgba(0,0,0,.12);
+}
+
+/* -----------------------------
+   THEMES
+------------------------------*/
+
+body.transparent{
+--bg1:rgba(255,255,255,.25);
+--bg2:rgba(255,255,255,.05);
+--text:#0f172a;
+--muted:#475569;
+--card:rgba(255,255,255,.35);
+--key:rgba(255,255,255,.35);
+--button:rgba(255,255,255,.30);
+--border:rgba(255,255,255,.45);
+--shadow:0 10px 30px rgba(0,0,0,.15);
 }
 
 body.light{
@@ -36,48 +51,13 @@ body.dark{
 --shadow:0 10px 30px rgba(0,0,0,.6);
 }
 
-:root{
---accent:#2563eb;
---radius:18px;
---shadow:0 8px 20px rgba(0,0,0,.12);
-}
-
-/* LIGHT MODE */
-@media (prefers-color-scheme: light){
-:root{
---bg1:#f6f8fb;
---bg2:#eef2f7;
---text:#0f172a;
---muted:#64748b;
---card:#ffffff;
---key:#ffffff;
---button:#f1f5f9;
---border:#e2e8f0;
-}
-}
-
-/* DARK MODE */
-@media (prefers-color-scheme: dark){
-:root{
---bg1:#0f172a;
---bg2:#020617;
---text:#f1f5f9;
---muted:#94a3b8;
---card:#111827;
---key:#1f2937;
---button:#1e293b;
---border:#334155;
---shadow:0 10px 30px rgba(0,0,0,.6);
-}
-}
-
 *{box-sizing:border-box}
 
 html,body{
 height:100%;
 margin:0;
 font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-background:linear-gradient(180deg,var(--bg1),var(--bg2));
+background:linear-gradient(180deg,#dfe9f3,#ffffff);
 color:var(--text);
 overflow:hidden;
 }
@@ -85,6 +65,15 @@ overflow:hidden;
 body{
 display:flex;
 justify-content:center;
+}
+
+/* glass effect */
+body.transparent .card,
+body.transparent .key,
+body.transparent .icon-btn,
+body.transparent .control{
+backdrop-filter:blur(20px);
+-webkit-backdrop-filter:blur(20px);
 }
 
 .app{
@@ -101,16 +90,12 @@ gap:10px;
 font-size:20px;
 font-weight:700;
 padding:0 6px;
-flex-shrink:0;
 display:flex;
 align-items:center;
 justify-content:space-between;
 }
 
-.header-actions{
-display:flex;
-gap:6px;
-}
+.header-actions{display:flex;gap:6px}
 
 .icon-btn{
 border:none;
@@ -125,9 +110,7 @@ justify-content:center;
 font-size:16px;
 }
 
-.icon-btn:active{
-transform:scale(.92);
-}
+.icon-btn:active{transform:scale(.92)}
 
 .main{
 flex:1;
@@ -146,17 +129,16 @@ border:1px solid var(--border);
 }
 
 .display{
-font-size:30px;
+font-size:clamp(22px,4vw,30px);
 font-weight:700;
-letter-spacing:.5px;
 text-align:right;
 margin-bottom:8px;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
 }
 
-.controls{
-display:flex;
-gap:8px;
-}
+.controls{display:flex;gap:8px}
 
 .control{
 flex:1;
@@ -166,53 +148,24 @@ padding:8px;
 text-align:center;
 }
 
-.control-title{
-font-size:11px;
-color:var(--muted);
-}
+.control-title{font-size:11px;color:var(--muted)}
+.control-value{font-size:18px;font-weight:600;margin:4px 0}
 
-.control-value{
-font-size:18px;
-font-weight:600;
-margin:4px 0;
-}
-
-.control-buttons{
-display:flex;
-}
+.control-buttons{display:flex}
 
 .control-buttons button{
-flex:1;
-border:none;
-background:var(--card);
-color:var(--text);
-border-radius:8px;
-margin:2px;
-padding:4px;
-font-size:16px;
+flex:1;border:none;background:var(--card);color:var(--text);
+border-radius:8px;margin:2px;padding:4px;font-size:16px;
 }
 
-.tip-selector{
-display:flex;
-gap:6px;
-margin-top:8px;
-}
+.tip-selector{display:flex;gap:6px;margin-top:8px}
 
 .tip-btn{
-flex:1;
-border:none;
-background:var(--button);
-color:var(--text);
-padding:6px 0;
-border-radius:10px;
-font-size:12px;
+flex:1;border:none;background:var(--button);color:var(--text);
+padding:6px 0;border-radius:10px;font-size:12px;
 }
 
-.tip-btn.active{
-background:var(--accent);
-color:#fff;
-font-weight:600;
-}
+.tip-btn.active{background:var(--accent);color:#fff;font-weight:600}
 
 .results{
 display:grid;
@@ -222,76 +175,26 @@ column-gap:12px;
 font-size:17px;
 }
 
-.results .label{
-color:var(--muted);
-}
-
-.results .value{
-text-align:right;
-font-weight:600;
-}
-
-.results .total{
-font-size:22px;
-font-weight:700;
-}
+.results .label{color:var(--muted)}
+.results .value{text-align:right;font-weight:600}
+.results .total{font-size:22px;font-weight:700}
 
 .round-row{
 grid-column:span 2;
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-top:4px;
 font-size:13px;
 }
 
-.round-options{
-display:flex;
-gap:4px;
-}
+.round-options{display:flex;gap:4px}
 
 .round-btn{
-border:none;
-background:var(--button);
-color:var(--text);
-border-radius:8px;
-padding:3px 8px;
-font-size:12px;
+border:none;background:var(--button);color:var(--text);
+border-radius:8px;padding:3px 8px;font-size:12px;
 }
 
-.round-btn.active{
-background:var(--accent);
-color:#fff;
-font-weight:600;
-}
-
-.round-toggle{
-width:42px;
-height:22px;
-border-radius:20px;
-background:#cbd5f5;
-position:relative;
-}
-
-.round-toggle::after{
-content:"";
-position:absolute;
-width:16px;
-height:16px;
-border-radius:50%;
-background:white;
-top:3px;
-left:3px;
-transition:.25s;
-}
-
-.round-toggle.active{
-background:var(--accent);
-}
-
-.round-toggle.active::after{
-left:23px;
-}
+.round-btn.active{background:var(--accent);color:#fff;font-weight:600}
 
 .keypad{
 flex:1;
@@ -301,7 +204,6 @@ grid-auto-rows:1fr;
 width:100%;
 height:100%;
 gap:8px;
-align-content:stretch;
 }
 
 .key{
@@ -311,59 +213,17 @@ font-size:clamp(20px,4vh,28px);
 background:var(--key);
 color:var(--text);
 box-shadow:var(--shadow);
-width:100%;
-aspect-ratio:1 / 1;
-display:flex;
-align-items:center;
-justify-content:center;
+display:flex;align-items:center;justify-content:center;
 }
 
-/* If vertical space is larger than width (portrait phones), allow keys to stretch slightly */
-@media (orientation: portrait){
-.key{
-height:100%;
-aspect-ratio:auto;
-}
-}
+.key:active{transform:scale(.92)}
 
-.key:active{
-transform:scale(.92);
-}
+.swipe-hint{text-align:center;font-size:11px;color:var(--muted)}
 
-.swipe-hint{
-text-align:center;
-font-size:11px;
-color:var(--muted);
-}
-
-/* LANDSCAPE MODE */
 @media (orientation: landscape){
-
-.main{
-flex-direction:row;
-}
-
-.left-panel{
-flex:1;
-min-height:0;
-flex:1.1;
-display:flex;
-flex-direction:column;
-gap:10px;
-}
-
-.right-panel{
-flex:1;
-display:flex;
-flex-direction:column;
-min-height:0;
-gap:10px;
-}
-
-.keypad{
-height:100%;
-}
-
+.main{flex-direction:row}
+.left-panel{flex:1.1;display:flex;flex-direction:column;gap:10px}
+.right-panel{flex:1;display:flex;flex-direction:column;gap:10px}
 }
 
 </style>
@@ -380,7 +240,7 @@ Tip Calculator
 </span>
 <div class="header-actions">
 <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
-<button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+<button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🫧</button>
 </div>
 </div>
 
@@ -389,7 +249,6 @@ Tip Calculator
 <div class="left-panel">
 
 <div class="card">
-
 <div id="subtotalDisplay" class="display">$0.00</div>
 
 <div class="controls">
@@ -478,155 +337,156 @@ Tip Calculator
 <script>
 
 // -----------------------------
-// Application State
+// App State
 // -----------------------------
-let input = "";
-let people = 1;
-let tipPercent = 18;
-let roundMode = 'none';
-let soundEnabled = true;
-let manualTheme = null;
+let inputRaw="";
+let people=1;
+let tipPercent=18;
+let roundMode='none';
+let soundEnabled=true;
+let themeMode='transparent';
 
-// Cache DOM references
-const app = document.getElementById('app');
-const subtotalDisplay = document.getElementById('subtotalDisplay');
-const tipAmount = document.getElementById('tipAmount');
-const totalAmount = document.getElementById('totalAmount');
-const splitAmount = document.getElementById('splitAmount');
-const peopleDisplay = document.getElementById('people');
-const tipPercentDisplay = document.getElementById('tipPercent');
-// rounding buttons handled dynamically
+const MAX_INPUT_LENGTH=14;
+
+// DOM
+const app=document.getElementById('app');
+const subtotalDisplay=document.getElementById('subtotalDisplay');
+const tipAmount=document.getElementById('tipAmount');
+const totalAmount=document.getElementById('totalAmount');
+const splitAmount=document.getElementById('splitAmount');
+const peopleDisplay=document.getElementById('people');
+const tipPercentDisplay=document.getElementById('tipPercent');
 
 // -----------------------------
-// Key Click Sound Feedback
+// Restore theme
 // -----------------------------
-let audioCtx = null;
+const savedTheme=localStorage.getItem('tipcalc-theme');
+if(savedTheme){
+ themeMode=savedTheme;
+}
+applyTheme();
 
-function haptic(){
-  if(!soundEnabled) return;
-  try{
-    if(!audioCtx){
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+// -----------------------------
+// Audio click
+// -----------------------------
+let audioCtx=null;
+let clickBuffer=null;
 
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = 'square';
-    osc.frequency.value = 1200;
-
-    gain.gain.value = 0.03;
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    const now = audioCtx.currentTime;
-
-    osc.start(now);
-    osc.stop(now + 0.02);
-
-  }catch(e){
-    // audio not available
+function initAudio(){
+ if(audioCtx) return;
+ try{
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const length=audioCtx.sampleRate*0.02;
+  clickBuffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+  const data=clickBuffer.getChannelData(0);
+  for(let i=0;i<length;i++){
+   data[i]=(Math.random()*2-1)*(1-i/length);
   }
+ }catch(e){audioCtx=null}
+}
+
+function playClick(){
+ if(!audioCtx||!clickBuffer) return;
+ const source=audioCtx.createBufferSource();
+ const gain=audioCtx.createGain();
+ source.buffer=clickBuffer;
+ gain.gain.value=0.12+Math.random()*0.05;
+ source.playbackRate.value=0.95+Math.random()*0.1;
+ source.connect(gain);
+ gain.connect(audioCtx.destination);
+ source.start();
 }
 
 // -----------------------------
-// Theme + Sound Controls
+// Theme
 // -----------------------------
+function applyTheme(){
+ document.body.classList.remove('transparent','light','dark');
+ document.body.classList.add(themeMode);
 
-function toggleSound(){
-  soundEnabled = !soundEnabled;
-  document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
+ const btn=document.getElementById('themeBtn');
+ if(themeMode==='transparent') btn.innerText='🫧';
+ if(themeMode==='light') btn.innerText='☀️';
+ if(themeMode==='dark') btn.innerText='🌙';
+
+ localStorage.setItem('tipcalc-theme',themeMode);
 }
 
 function toggleTheme(){
-  const body = document.body;
+ if(themeMode==='transparent') themeMode='light';
+ else if(themeMode==='light') themeMode='dark';
+ else themeMode='transparent';
 
-  if(manualTheme === 'dark'){
-    manualTheme = 'light';
-    body.classList.remove('dark');
-    body.classList.add('light');
-    document.getElementById('themeBtn').innerText = '☀️';
-  }
-  else if(manualTheme === 'light'){
-    manualTheme = null;
-    body.classList.remove('light');
-    body.classList.remove('dark');
-    document.getElementById('themeBtn').innerText = '🌙';
-  }
-  else{
-    manualTheme = 'dark';
-    body.classList.remove('light');
-    body.classList.add('dark');
-    document.getElementById('themeBtn').innerText = '🌙';
-  }
+ applyTheme();
 }
 
 // -----------------------------
-// Keypad Input
+// Sound
 // -----------------------------
-function press(value){
-  if(value === '.' && input.includes('.')) return;
-  input += value;
-  haptic();
-  update();
+function toggleSound(){
+ soundEnabled=!soundEnabled;
+ document.getElementById('soundBtn').innerText=soundEnabled?'🔊':'🔇';
+}
+
+// -----------------------------
+// Keypad
+// -----------------------------
+function press(v){
+
+ if(inputRaw.length>=MAX_INPUT_LENGTH) return;
+
+ if(v==='.' && inputRaw.includes('.')) return;
+
+ inputRaw+=v;
+ update();
 }
 
 function backspace(){
-  if(input.length === 0) return;
-  input = input.slice(0, -1);
-  haptic();
-  update();
+ if(!inputRaw) return;
+ inputRaw=inputRaw.slice(0,-1);
+ update();
 }
 
 function clearInput(){
-  if(input === "") return;
-  input = "";
-  haptic();
-  update();
+ inputRaw="";
+ update();
 }
 
 // -----------------------------
-// Controls
+// Settings
 // -----------------------------
-function changePeople(delta){
-  people = Math.max(1, people + delta);
-  peopleDisplay.innerText = people;
-  haptic();
-  update();
+function changePeople(v){
+ people=Math.max(1,people+v);
+ peopleDisplay.innerText=people;
+ update();
 }
 
-function changeTip(delta){
-  tipPercent = Math.max(0, tipPercent + delta);
-  tipPercentDisplay.innerText = tipPercent + "%";
-  highlightTip();
-  haptic();
-  update();
+function changeTip(v){
+ tipPercent=Math.max(0,tipPercent+v);
+ tipPercentDisplay.innerText=tipPercent+"%";
+ highlightTip();
+ update();
 }
 
-function setTip(value){
-  tipPercent = value;
-  tipPercentDisplay.innerText = value + "%";
-  highlightTip();
-  haptic();
-  update();
+function setTip(v){
+ tipPercent=v;
+ tipPercentDisplay.innerText=v+"%";
+ highlightTip();
+ update();
 }
 
 function setRounding(mode){
-  roundMode = mode;
-
-  document.querySelectorAll('.round-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.innerText.toLowerCase() === mode);
-  });
-
-  haptic();
-  update();
+ roundMode=mode;
+ document.querySelectorAll('.round-btn').forEach(btn=>{
+  btn.classList.toggle('active',btn.innerText.toLowerCase()===mode);
+ });
+ update();
 }
 
 function highlightTip(){
-  document.querySelectorAll('.tip-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.innerText === tipPercent + '%');
-  });
+ document.querySelectorAll('.tip-btn').forEach(btn=>{
+  btn.classList.toggle('active',btn.innerText===tipPercent+'%');
+ });
 }
 
 // -----------------------------
@@ -634,62 +494,116 @@ function highlightTip(){
 // -----------------------------
 function update(){
 
-  const subtotal = parseFloat(input || 0);
+ const subtotal=parseFloat(inputRaw||0);
+ let tip=subtotal*(tipPercent/100);
+ let total=subtotal+tip;
 
-  let tip = subtotal * (tipPercent / 100);
-  let total = subtotal + tip;
+ if(roundMode==='total'){
+  total=Math.ceil(total);
+  tip=total-subtotal;
+ }
 
-  if(roundMode === 'total'){
-    total = Math.ceil(total);
-    tip = total - subtotal;
-  }
+ if(roundMode==='tip'){
+  tip=Math.ceil(tip);
+  total=subtotal+tip;
+ }
 
-  if(roundMode === 'tip'){
-    tip = Math.ceil(tip);
-    total = subtotal + tip;
-  }
+ const split=total/people;
 
-  const split = total / people;
+ subtotalDisplay.innerText=formatInput(inputRaw);
 
-  format(subtotal, subtotalDisplay);
-  format(tip, tipAmount);
-  format(total, totalAmount);
-  format(split, splitAmount);
+ format(tip,tipAmount);
+ format(total,totalAmount);
+ format(split,splitAmount);
+}
+
+function format(v,el){
+ el.innerText=v.toLocaleString(undefined,{style:'currency',currency:'USD'});
+}
+
+function formatInput(value){
+
+ if(!value) return '$0.00';
+
+ const parts=value.split('.');
+ const whole=parts[0]||'0';
+ const decimal=parts[1]??null;
+
+ const formattedWhole=parseInt(whole,10).toLocaleString();
+
+ if(decimal!==null){
+  return '$'+formattedWhole+'.'+decimal;
+ }
+
+ return '$'+formattedWhole;
 }
 
 // -----------------------------
-// Formatting
+// Long Press Delete
 // -----------------------------
-function format(value, element){
-  element.innerText = value.toLocaleString(undefined, {
-    style: 'currency',
-    currency: 'USD'
-  });
+let deleteInterval=null;
+const deleteKey=document.querySelector('.keypad button:last-child');
+
+if(deleteKey){
+ deleteKey.addEventListener('pointerdown',()=>{
+  if(deleteInterval) return;
+
+  deleteInterval=setInterval(()=>{
+   if(!inputRaw){
+    clearInterval(deleteInterval);
+    deleteInterval=null;
+    return;
+   }
+
+   inputRaw=inputRaw.slice(0,-1);
+   update();
+
+  },120);
+ });
+
+ deleteKey.addEventListener('pointerup',()=>{
+  clearInterval(deleteInterval);
+  deleteInterval=null;
+ });
+
+ deleteKey.addEventListener('pointerleave',()=>{
+  clearInterval(deleteInterval);
+  deleteInterval=null;
+ });
 }
 
 // -----------------------------
-// Swipe Gesture (Clear)
+// Pointerdown sound trigger
 // -----------------------------
-let startX = null;
+app.addEventListener('pointerdown',e=>{
 
-app.addEventListener('touchstart', e => {
-  startX = e.touches[0].clientX;
+ const btn=e.target.closest('button');
+ if(!btn) return;
+
+ if(!soundEnabled) return;
+
+ if(!audioCtx) initAudio();
+
+ try{playClick()}catch(err){}
+
 });
 
-app.addEventListener('touchend', e => {
-  if(startX === null) return;
+// -----------------------------
+// Swipe Clear
+// -----------------------------
+let startX=null;
 
-  const endX = e.changedTouches[0].clientX;
-  const diff = startX - endX;
-
-  if(diff > 120){
-    clearInput();
-  }
-
-  startX = null;
+app.addEventListener('touchstart',e=>{
+ startX=e.touches[0].clientX;
 });
 
-// Initial render
+app.addEventListener('touchend',e=>{
+ if(startX===null) return;
+ const endX=e.changedTouches[0].clientX;
+ if(startX-endX>120) clearInput();
+ startX=null;
+});
+
 update();
 
 </script>
