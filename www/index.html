@@ -69,10 +69,35 @@ gap:10px;
 }
 
 .header{
-font-size:22px;
+font-size:20px;
 font-weight:700;
 padding:0 6px;
 flex-shrink:0;
+display:flex;
+align-items:center;
+justify-content:space-between;
+}
+
+.header-actions{
+display:flex;
+gap:6px;
+}
+
+.icon-btn{
+border:none;
+background:var(--button);
+color:var(--text);
+border-radius:10px;
+width:34px;
+height:34px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:16px;
+}
+
+.icon-btn:active{
+transform:scale(.92);
 }
 
 .main{
@@ -191,6 +216,26 @@ margin-top:4px;
 font-size:13px;
 }
 
+.round-options{
+display:flex;
+gap:4px;
+}
+
+.round-btn{
+border:none;
+background:var(--button);
+color:var(--text);
+border-radius:8px;
+padding:3px 8px;
+font-size:12px;
+}
+
+.round-btn.active{
+background:var(--accent);
+color:#fff;
+font-weight:600;
+}
+
 .round-toggle{
 width:42px;
 height:22px;
@@ -306,7 +351,13 @@ height:100%;
 
 <div class="app" id="app">
 
-<div class="header">Tip Calculator</div>
+<div class="header">
+<span>Tip Calculator</span>
+<div class="header-actions">
+<button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+<button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+</div>
+</div>
 
 <div class="main">
 
@@ -359,8 +410,12 @@ height:100%;
 <div id="splitAmount" class="value">$0.00</div>
 
 <div class="round-row">
-<span>Round Total</span>
-<div id="roundToggle" class="round-toggle" onclick="toggleRound()"></div>
+<span>Rounding</span>
+<div class="round-options">
+<button class="round-btn active" onclick="setRounding('none')">None</button>
+<button class="round-btn" onclick="setRounding('tip')">Tip</button>
+<button class="round-btn" onclick="setRounding('total')">Total</button>
+</div>
 </div>
 
 </div>
@@ -403,7 +458,9 @@ height:100%;
 let input = "";
 let people = 1;
 let tipPercent = 18;
-let roundTotal = false;
+let roundMode = 'none';
+let soundEnabled = true;
+let manualTheme = null;
 
 // Cache DOM references
 const app = document.getElementById('app');
@@ -413,7 +470,7 @@ const totalAmount = document.getElementById('totalAmount');
 const splitAmount = document.getElementById('splitAmount');
 const peopleDisplay = document.getElementById('people');
 const tipPercentDisplay = document.getElementById('tipPercent');
-const roundToggle = document.getElementById('roundToggle');
+// rounding buttons handled dynamically
 
 // -----------------------------
 // Key Click Sound Feedback
@@ -421,6 +478,7 @@ const roundToggle = document.getElementById('roundToggle');
 let audioCtx = null;
 
 function haptic(){
+  if(!soundEnabled) return;
   try{
     if(!audioCtx){
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -430,24 +488,49 @@ function haptic(){
     const gain = audioCtx.createGain();
 
     osc.type = 'square';
-    osc.frequency.value = 1200; // light key click pitch
+    osc.frequency.value = 1200;
 
-    gain.gain.value = 0.03; // very soft volume
+    gain.gain.value = 0.03;
 
     osc.connect(gain);
     gain.connect(audioCtx.destination);
 
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.02); // very short click
+    const now = audioCtx.currentTime;
+
+    osc.start(now);
+    osc.stop(now + 0.02);
 
   }catch(e){
-    // fail silently if audio unavailable
+    // audio not available
   }
 }
-  } catch(e){}
 
-  if (navigator.vibrate) {
-    navigator.vibrate(5);
+// -----------------------------
+// Theme + Sound Controls
+// -----------------------------
+
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
+}
+
+function toggleTheme(){
+  const root = document.documentElement;
+
+  if(manualTheme === 'dark'){
+    manualTheme = 'light';
+    root.style.colorScheme = 'light';
+    document.getElementById('themeBtn').innerText = '☀️';
+  }
+  else if(manualTheme === 'light'){
+    manualTheme = null;
+    root.style.colorScheme = '';
+    document.getElementById('themeBtn').innerText = '🌙';
+  }
+  else{
+    manualTheme = 'dark';
+    root.style.colorScheme = 'dark';
+    document.getElementById('themeBtn').innerText = '🌙';
   }
 }
 
@@ -501,9 +584,13 @@ function setTip(value){
   update();
 }
 
-function toggleRound(){
-  roundTotal = !roundTotal;
-  roundToggle.classList.toggle('active', roundTotal);
+function setRounding(mode){
+  roundMode = mode;
+
+  document.querySelectorAll('.round-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.innerText.toLowerCase() === mode);
+  });
+
   haptic();
   update();
 }
@@ -524,9 +611,14 @@ function update(){
   let tip = subtotal * (tipPercent / 100);
   let total = subtotal + tip;
 
-  if(roundTotal){
+  if(roundMode === 'total'){
     total = Math.ceil(total);
     tip = total - subtotal;
+  }
+
+  if(roundMode === 'tip'){
+    tip = Math.ceil(tip);
+    total = subtotal + tip;
   }
 
   const split = total / people;
