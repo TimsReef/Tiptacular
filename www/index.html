@@ -397,134 +397,162 @@ height:100%;
 
 <script>
 
-let input="";
-let people=1;
-let tipPercent=18;
-let roundTotal=false;
+// -----------------------------
+// Application State
+// -----------------------------
+let input = "";
+let people = 1;
+let tipPercent = 18;
+let roundTotal = false;
 
+// Cache DOM references
+const app = document.getElementById('app');
+const subtotalDisplay = document.getElementById('subtotalDisplay');
+const tipAmount = document.getElementById('tipAmount');
+const totalAmount = document.getElementById('totalAmount');
+const splitAmount = document.getElementById('splitAmount');
+const peopleDisplay = document.getElementById('people');
+const tipPercentDisplay = document.getElementById('tipPercent');
+const roundToggle = document.getElementById('roundToggle');
+
+// -----------------------------
+// Haptic Feedback
+// -----------------------------
 function haptic(){
-// Very light haptic similar to native calculator taps
-try{
-if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Haptics){
-Capacitor.Plugins.Haptics.selectionStart();
-Capacitor.Plugins.Haptics.selectionEnd();
-return;
-}
-}catch(e){}
+  try {
+    if (window.Capacitor?.Plugins?.Haptics) {
+      // lightest native feedback
+      Capacitor.Plugins.Haptics.selectionStart();
+      Capacitor.Plugins.Haptics.selectionEnd();
+      return;
+    }
+  } catch(e){}
 
-// Softer browser fallback
-if(navigator.vibrate){
-navigator.vibrate(5);
-}
-});
-return;
-}
-}catch(e){}
-
-// Fallback for mobile browsers
-if(navigator.vibrate){
-navigator.vibrate(10);
-}
+  if (navigator.vibrate) {
+    navigator.vibrate(5);
+  }
 }
 
-function press(v){
-if(v==='.' && input.includes('.')) return;
-input+=v;
-haptic();
-update();
+// -----------------------------
+// Keypad Input
+// -----------------------------
+function press(value){
+  if(value === '.' && input.includes('.')) return;
+  input += value;
+  haptic();
+  update();
 }
 
 function backspace(){
-input=input.slice(0,-1);
-haptic();
-update();
+  if(input.length === 0) return;
+  input = input.slice(0, -1);
+  haptic();
+  update();
 }
 
 function clearInput(){
-input="";
-haptic();
-update();
+  if(input === "") return;
+  input = "";
+  haptic();
+  update();
+}
+
+// -----------------------------
+// Controls
+// -----------------------------
+function changePeople(delta){
+  people = Math.max(1, people + delta);
+  peopleDisplay.innerText = people;
+  haptic();
+  update();
+}
+
+function changeTip(delta){
+  tipPercent = Math.max(0, tipPercent + delta);
+  tipPercentDisplay.innerText = tipPercent + "%";
+  highlightTip();
+  haptic();
+  update();
+}
+
+function setTip(value){
+  tipPercent = value;
+  tipPercentDisplay.innerText = value + "%";
+  highlightTip();
+  haptic();
+  update();
 }
 
 function toggleRound(){
-roundTotal=!roundTotal;
-document.getElementById('roundToggle').classList.toggle('active',roundTotal);
-update();
-}
-
-function changePeople(v){
-people=Math.max(1,people+v);
-document.getElementById('people').innerText=people;
-haptic();
-update();
-}
-
-function changeTip(v){
-tipPercent=Math.max(0,tipPercent+v);
-document.getElementById('tipPercent').innerText=tipPercent+"%";
-highlightTip();
-haptic();
-update();
-}
-
-function setTip(v){
-tipPercent=v;
-document.getElementById('tipPercent').innerText=v+"%";
-highlightTip();
-haptic();
-update();
+  roundTotal = !roundTotal;
+  roundToggle.classList.toggle('active', roundTotal);
+  haptic();
+  update();
 }
 
 function highlightTip(){
-document.querySelectorAll('.tip-btn').forEach(b=>{
-b.classList.remove('active');
-if(b.innerText===tipPercent+'%') b.classList.add('active');
-});
+  document.querySelectorAll('.tip-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.innerText === tipPercent + '%');
+  });
 }
 
+// -----------------------------
+// Calculations
+// -----------------------------
 function update(){
 
-let subtotal=parseFloat(input||0);
-let tip=subtotal*(tipPercent/100);
-let total=subtotal+tip;
+  const subtotal = parseFloat(input || 0);
 
-if(roundTotal){
-total=Math.ceil(total);
-tip=total-subtotal;
+  let tip = subtotal * (tipPercent / 100);
+  let total = subtotal + tip;
+
+  if(roundTotal){
+    total = Math.ceil(total);
+    tip = total - subtotal;
+  }
+
+  const split = total / people;
+
+  format(subtotal, subtotalDisplay);
+  format(tip, tipAmount);
+  format(total, totalAmount);
+  format(split, splitAmount);
 }
 
-let split=total/people;
-
-format(subtotal,'subtotalDisplay');
-format(tip,'tipAmount');
-format(total,'totalAmount');
-format(split,'splitAmount');
-
+// -----------------------------
+// Formatting
+// -----------------------------
+function format(value, element){
+  element.innerText = value.toLocaleString(undefined, {
+    style: 'currency',
+    currency: 'USD'
+  });
 }
 
-function format(v,id){
-let el=document.getElementById(id);
-el.innerText=v.toLocaleString(undefined,{style:'currency',currency:'USD'});
-}
+// -----------------------------
+// Swipe Gesture (Clear)
+// -----------------------------
+let startX = null;
 
-let startX=null;
-
-document.getElementById('app').addEventListener('touchstart',e=>{
-startX=e.touches[0].clientX;
+app.addEventListener('touchstart', e => {
+  startX = e.touches[0].clientX;
 });
 
-document.getElementById('app').addEventListener('touchend',e=>{
-if(startX===null) return;
+app.addEventListener('touchend', e => {
+  if(startX === null) return;
 
-let endX=e.changedTouches[0].clientX;
-let diff=startX-endX;
+  const endX = e.changedTouches[0].clientX;
+  const diff = startX - endX;
 
-if(diff>120){
-clearInput();
-}
+  if(diff > 120){
+    clearInput();
+  }
 
-startX=null;
+  startX = null;
 });
+
+// Initial render
+update();
 
 </script>
 
