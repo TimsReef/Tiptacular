@@ -30,7 +30,7 @@ jobs:
         run: npx capacitor-assets generate --android
 
       - name: Android Configuration Settings
-        run: npx trapese run configure.yaml --android-project android
+        run: npx trapeze run configure.yaml --android-project android
 
       - name: Sync Capacitor
         run: npx cap sync android
