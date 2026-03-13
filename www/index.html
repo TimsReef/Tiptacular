@@ -13,6 +13,35 @@
 --shadow:0 8px 20px rgba(0,0,0,.12);
 }
 
+body.light{
+--bg1:#f6f8fb;
+--bg2:#eef2f7;
+--text:#0f172a;
+--muted:#64748b;
+--card:#ffffff;
+--key:#ffffff;
+--button:#f1f5f9;
+--border:#e2e8f0;
+}
+
+body.dark{
+--bg1:#0f172a;
+--bg2:#020617;
+--text:#f1f5f9;
+--muted:#94a3b8;
+--card:#111827;
+--key:#1f2937;
+--button:#1e293b;
+--border:#334155;
+--shadow:0 10px 30px rgba(0,0,0,.6);
+}
+
+:root{
+--accent:#2563eb;
+--radius:18px;
+--shadow:0 8px 20px rgba(0,0,0,.12);
+}
+
 /* LIGHT MODE */
 @media (prefers-color-scheme: light){
 :root{
@@ -117,7 +146,7 @@ border:1px solid var(--border);
 }
 
 .display{
-font-size:36px;
+font-size:30px;
 font-weight:700;
 letter-spacing:.5px;
 text-align:right;
@@ -188,9 +217,9 @@ font-weight:600;
 .results{
 display:grid;
 grid-template-columns:1fr 1fr;
-row-gap:6px;
+row-gap:8px;
 column-gap:12px;
-font-size:15px;
+font-size:17px;
 }
 
 .results .label{
@@ -203,7 +232,7 @@ font-weight:600;
 }
 
 .results .total{
-font-size:18px;
+font-size:22px;
 font-weight:700;
 }
 
@@ -328,13 +357,6 @@ flex:1;
 display:flex;
 flex-direction:column;
 min-height:0;
-flex:1;
-display:flex;
-flex-direction:column;
-min-height:0;
-flex:1;
-display:flex;
-flex-direction:column;
 gap:10px;
 }
 
@@ -352,7 +374,10 @@ height:100%;
 <div class="app" id="app">
 
 <div class="header">
-<span>Tip Calculator</span>
+<span style="display:flex;align-items:center;gap:8px;">
+<img src="assets/icon/icon-192.png" alt="app icon" style="width:22px;height:22px;border-radius:5px;">
+Tip Calculator
+</span>
 <div class="header-actions">
 <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
 <button class="icon-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
@@ -515,13 +540,34 @@ function toggleSound(){
 }
 
 function toggleTheme(){
-  const root = document.documentElement;
+  const body = document.body;
 
   if(manualTheme === 'dark'){
     manualTheme = 'light';
-    root.style.colorScheme = 'light';
+    body.classList.remove('dark');
+    body.classList.add('light');
     document.getElementById('themeBtn').innerText = '☀️';
   }
+  else if(manualTheme === 'light'){
+    manualTheme = null;
+    body.classList.remove('light');
+    body.classList.remove('dark');
+    document.getElementById('themeBtn').innerText = '🌙';
+  }
+  else{
+    manualTheme = 'dark';
+    body.classList.remove('light');
+    body.classList.add('dark');
+    document.getElementById('themeBtn').innerText = '🌙';
+  }
+}
+  else{
+    manualTheme = 'dark';
+    body.classList.remove('light');
+    body.classList.add('dark');
+    document.getElementById('themeBtn').innerText = '🌙';
+  }
+}
   else if(manualTheme === 'light'){
     manualTheme = null;
     root.style.colorScheme = '';
