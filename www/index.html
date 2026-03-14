@@ -651,6 +651,46 @@ update();
 // Advanced Receipt Scanner (On-device)
 // -----------------------------
 
+// -----------------------------
+// Async OpenCV Loader
+// -----------------------------
+let opencvReady=false;
+let opencvLoading=false;
+
+function loadOpenCV(){
+ return new Promise((resolve,reject)=>{
+  if(opencvReady){resolve();return;}
+
+  if(opencvLoading){
+   const check=setInterval(()=>{
+    if(opencvReady){clearInterval(check);resolve();}
+   },50);
+   return;
+  }
+
+  opencvLoading=true;
+
+  const script=document.createElement('script');
+  script.src='opencv.js';
+  script.async=true;
+
+  script.onload=()=>{
+   if(typeof cv!=='undefined'){
+    cv['onRuntimeInitialized']=()=>{
+     opencvReady=true;
+     resolve();
+    };
+   }else{
+    reject('OpenCV failed to load');
+   }
+  };
+
+  script.onerror=()=>reject('OpenCV script error');
+
+  document.head.appendChild(script);
+ });
+}
+
 let scannerStream=null;
 let scannerVideo=null;
 let scannerOverlay=null;
@@ -737,7 +777,12 @@ function captureFrame(){
 
  closeScanner();
 
- processReceiptPipeline(canvas);
+ loadOpenCV().then(()=>{
+  processReceiptPipeline(canvas);
+}).catch(()=>{
+  // fallback without OpenCV
+  processReceiptPipeline(canvas);
+});
 }
 
 // -----------------------------
@@ -973,8 +1018,7 @@ async function processReceipt(canvas){
   if(result && result.blocks){
    result.blocks.forEach(block=>{
     block.lines.forEach(line=>{
-     text+=line.text+'
-';
+     text+=line.text+'\n';
     });
    });
   }
