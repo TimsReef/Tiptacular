@@ -737,7 +737,7 @@ function captureFrame(){
 
  closeScanner();
 
- const processed=preprocessReceipt(canvas);
+ const processed=detectReceiptAndCrop(canvas);
  processReceipt(processed);
 }
 
@@ -745,30 +745,74 @@ function captureFrame(){
 // Image preprocessing (improves OCR)
 // -----------------------------
 
-function preprocessReceipt(canvas){
+function detectReceiptAndCrop(canvas){
 
  const ctx=canvas.getContext('2d');
- const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+ const w=canvas.width;
+ const h=canvas.height;
+
+ const img=ctx.getImageData(0,0,w,h);
  const data=img.data;
 
+ // grayscale + threshold
  for(let i=0;i<data.length;i+=4){
-
-  const r=data[i];
-  const g=data[i+1];
-  const b=data[i+2];
-
-  const gray=(r+g+b)/3;
-
-  const v=gray>160?255:0;
-
-  data[i]=v;
-  data[i+1]=v;
-  data[i+2]=v;
+  const gray=(data[i]+data[i+1]+data[i+2])/3;
+  const v=gray>150?255:0;
+  data[i]=data[i+1]=data[i+2]=v;
  }
 
  ctx.putImageData(img,0,0);
 
- return canvas;
+ // detect bounding box of receipt (largest white region)
+ const img2=ctx.getImageData(0,0,w,h).data;
+
+ let minX=w, minY=h, maxX=0, maxY=0;
+
+ for(let y=0;y<h;y+=4){
+  for(let x=0;x<w;x+=4){
+
+   const i=(y*w+x)*4;
+
+   const v=img2[i];
+
+   if(v===255){
+    if(x<minX) minX=x;
+    if(y<minY) minY=y;
+    if(x>maxX) maxX=x;
+    if(y>maxY) maxY=y;
+   }
+
+  }
+ }
+
+ // fallback if detection fails
+ if(maxX-minX<50 || maxY-minY<50){
+  return canvas;
+ }
+
+ const cropW=maxX-minX;
+ const cropH=maxY-minY;
+
+ const cropped=document.createElement('canvas');
+ cropped.width=cropW;
+ cropped.height=cropH;
+
+ const cctx=cropped.getContext('2d');
+ cctx.drawImage(canvas,minX,minY,cropW,cropH,0,0,cropW,cropH);
+
+ // final contrast boost
+ const img3=cctx.getImageData(0,0,cropW,cropH);
+ const d=img3.data;
+
+ for(let i=0;i<d.length;i+=4){
+  const gray=(d[i]+d[i+1]+d[i+2])/3;
+  const v=gray>140?255:0;
+  d[i]=d[i+1]=d[i+2]=v;
+ }
+
+ cctx.putImageData(img3,0,0);
+
+ return cropped;
 }
 
 // -----------------------------
