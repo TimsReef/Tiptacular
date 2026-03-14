@@ -737,15 +737,14 @@ function captureFrame(){
 
  closeScanner();
 
- const processed=detectReceiptAndCrop(canvas);
- processReceipt(processed);
+ processReceiptPipeline(canvas);
 }
 
 // -----------------------------
 // OpenCV Edge Detection + Perspective Correction
 // -----------------------------
 
-function detectReceiptAndCrop(canvas){
+function perspectiveCorrect(canvas){
 
  if(typeof cv === 'undefined'){
   // fallback to original canvas if OpenCV not loaded
@@ -844,6 +843,111 @@ function detectReceiptAndCrop(canvas){
  contours.delete();hierarchy.delete();warped.delete();
 
  return resultCanvas;
+}
+
+// -----------------------------
+// Text Region Detection (OpenCV)
+// -----------------------------
+
+function detectTextRegions(canvas){
+ if(typeof cv==='undefined') return [canvas];
+
+ const src=cv.imread(canvas);
+ const gray=new cv.Mat();
+ const thresh=new cv.Mat();
+
+ cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+ cv.adaptiveThreshold(gray,thresh,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY_INV,15,4);
+
+ const contours=new cv.MatVector();
+ const hierarchy=new cv.Mat();
+ cv.findContours(thresh,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+
+ const regions=[];
+
+ for(let i=0;i<contours.size();i++){
+  const rect=cv.boundingRect(contours.get(i));
+
+  if(rect.width<80 || rect.height<20) continue;
+
+  const region=document.createElement('canvas');
+  region.width=rect.width;
+  region.height=rect.height;
+
+  const ctx=region.getContext('2d');
+  ctx.drawImage(canvas,rect.x,rect.y,rect.width,rect.height,0,0,rect.width,rect.height);
+
+  regions.push(region);
+ }
+
+ src.delete();gray.delete();thresh.delete();
+ contours.delete();hierarchy.delete();
+
+ if(regions.length===0) regions.push(canvas);
+
+ return regions;
+}
+
+// -----------------------------
+// OCR Region Runner
+// -----------------------------
+
+async function runMLKitOCR(canvas){
+
+ if(!window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.TextRecognition){
+  return '';
+ }
+
+ try{
+
+  const base64=canvas.toDataURL('image/jpeg',0.9).split(',')[1];
+
+  const result=await Capacitor.Plugins.TextRecognition.recognize({image:base64});
+
+  let text='';
+
+  if(result && result.blocks){
+   result.blocks.forEach(block=>{
+    block.lines.forEach(line=>{
+     text+=line.text+'\n';
+    });
+   });
+  }
+
+  return text;
+
+ }catch(e){
+  console.error(e);
+  return '';
+ }
+}
+
+// -----------------------------
+// Receipt Pipeline Controller
+// -----------------------------
+
+async function processReceiptPipeline(canvas){
+
+ const corrected=perspectiveCorrect(canvas);
+ const regions=detectTextRegions(corrected);
+
+ let text='';
+
+ for(const region of regions){
+  const t=await runMLKitOCR(region);
+  if(t) text+=t;
+ }
+
+ const total=findReceiptTotal(text);
+
+ if(total){
+  inputRaw=String(total);
+  update();
+  alert('Detected total: $'+total);
+ }else{
+  alert('Could not detect receipt total');
+ }
+
 }
 
 // -----------------------------
