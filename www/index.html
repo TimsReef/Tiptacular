@@ -647,44 +647,133 @@ update();
 // Receipt Camera OCR (On-device)
 // -----------------------------
 
+// -----------------------------
+// Advanced Receipt Scanner (On-device)
+// -----------------------------
+
+let scannerStream=null;
+let scannerVideo=null;
+let scannerOverlay=null;
+
 async function captureReceipt(){
+
  try{
-  const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
 
-  const video=document.createElement('video');
-  video.style.position='fixed';
-  video.style.top='0';
-  video.style.left='0';
-  video.style.width='100%';
-  video.style.height='100%';
-  video.style.objectFit='cover';
-  video.style.zIndex='9999';
+  scannerStream = await navigator.mediaDevices.getUserMedia({
+   video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}
+  });
 
-  document.body.appendChild(video);
+  scannerVideo=document.createElement('video');
+  scannerVideo.autoplay=true;
+  scannerVideo.playsInline=true;
+  scannerVideo.srcObject=scannerStream;
 
-  video.srcObject=stream;
-  await video.play();
+  scannerOverlay=document.createElement('div');
+  scannerOverlay.style.position='fixed';
+  scannerOverlay.style.top='0';
+  scannerOverlay.style.left='0';
+  scannerOverlay.style.width='100%';
+  scannerOverlay.style.height='100%';
+  scannerOverlay.style.zIndex='9999';
+  scannerOverlay.style.background='black';
 
-  video.addEventListener('click',async ()=>{
+  scannerVideo.style.width='100%';
+  scannerVideo.style.height='100%';
+  scannerVideo.style.objectFit='cover';
 
-   const canvas=document.createElement('canvas');
-   canvas.width=video.videoWidth;
-   canvas.height=video.videoHeight;
+  const guide=document.createElement('div');
+  guide.style.position='absolute';
+  guide.style.border='3px solid rgba(255,255,255,.9)';
+  guide.style.borderRadius='14px';
+  guide.style.width='80%';
+  guide.style.height='60%';
+  guide.style.top='20%';
+  guide.style.left='10%';
+  guide.style.boxShadow='0 0 0 2000px rgba(0,0,0,.45)';
 
-   const ctx=canvas.getContext('2d');
-   ctx.drawImage(video,0,0);
+  const captureBtn=document.createElement('button');
+  captureBtn.innerText='Scan Receipt';
+  captureBtn.style.position='absolute';
+  captureBtn.style.bottom='40px';
+  captureBtn.style.left='50%';
+  captureBtn.style.transform='translateX(-50%)';
+  captureBtn.style.padding='14px 22px';
+  captureBtn.style.fontSize='16px';
+  captureBtn.style.borderRadius='14px';
+  captureBtn.style.border='none';
+  captureBtn.style.background='#2563eb';
+  captureBtn.style.color='white';
 
-   stream.getTracks().forEach(t=>t.stop());
-   video.remove();
+  scannerOverlay.appendChild(scannerVideo);
+  scannerOverlay.appendChild(guide);
+  scannerOverlay.appendChild(captureBtn);
 
-   processReceipt(canvas);
+  document.body.appendChild(scannerOverlay);
 
-  },{once:true});
+  captureBtn.onclick=captureFrame;
 
- }catch(err){
+ }catch(e){
   alert('Camera unavailable');
  }
 }
+
+function closeScanner(){
+ if(scannerStream){
+  scannerStream.getTracks().forEach(t=>t.stop());
+ }
+ if(scannerOverlay) scannerOverlay.remove();
+ scannerOverlay=null;
+ scannerVideo=null;
+}
+
+function captureFrame(){
+
+ const canvas=document.createElement('canvas');
+ canvas.width=scannerVideo.videoWidth;
+ canvas.height=scannerVideo.videoHeight;
+
+ const ctx=canvas.getContext('2d');
+ ctx.drawImage(scannerVideo,0,0);
+
+ closeScanner();
+
+ const processed=preprocessReceipt(canvas);
+ processReceipt(processed);
+}
+
+// -----------------------------
+// Image preprocessing (improves OCR)
+// -----------------------------
+
+function preprocessReceipt(canvas){
+
+ const ctx=canvas.getContext('2d');
+ const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+ const data=img.data;
+
+ for(let i=0;i<data.length;i+=4){
+
+  const r=data[i];
+  const g=data[i+1];
+  const b=data[i+2];
+
+  const gray=(r+g+b)/3;
+
+  const v=gray>160?255:0;
+
+  data[i]=v;
+  data[i+1]=v;
+  data[i+2]=v;
+ }
+
+ ctx.putImageData(img,0,0);
+
+ return canvas;
+}
+
+// -----------------------------
+// OCR Processing
+// -----------------------------
 
 async function processReceipt(canvas){
  try{
@@ -694,7 +783,9 @@ async function processReceipt(canvas){
   }
 
   const worker = await Tesseract.createWorker('eng');
+
   const { data:{ text } } = await worker.recognize(canvas);
+
   await worker.terminate();
 
   const total=findReceiptTotal(text);
@@ -721,6 +812,10 @@ async function loadOCR(){
   document.head.appendChild(s);
  });
 }
+
+// -----------------------------
+// Receipt Parsing Heuristics
+// -----------------------------
 
 function findReceiptTotal(text){
 
