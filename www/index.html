@@ -765,12 +765,23 @@ function startRealtimeDetection(statusLabel){
    octx.strokeRect(r.x,r.y,r.w,r.h);
   });
 
-  if(receiptFound && numberRegions.length>0){
-   stableFrames++;
-   statusLabel.innerText='Receipt detected – hold steady…';
+  const lighting=analyzeLighting(canvas);
+
+  const confidence=computeScanConfidence(receiptFound,numberRegions.length,lighting);
+
+  // draw lighting warning
+  if(lighting.glare){
+    statusLabel.innerText='Reduce glare';
+    stableFrames=0;
+  }else if(lighting.dark){
+    statusLabel.innerText='Increase lighting';
+    stableFrames=0;
+  }else if(confidence>0.7){
+    stableFrames++;
+    statusLabel.innerText='Receipt detected – hold steady…';
   }else{
-   stableFrames=0;
-   statusLabel.innerText='Align receipt inside frame';
+    stableFrames=0;
+    statusLabel.innerText='Align receipt inside frame';
   }
 
   if(stableFrames>=REQUIRED_STABLE_FRAMES){
@@ -830,6 +841,53 @@ function detectNumberRegions(canvas){
  contours.delete();hierarchy.delete();
 
  return regions;
+}
+
+// -----------------------------
+// Scan Confidence + Lighting Analysis
+// -----------------------------
+
+function computeScanConfidence(receiptFound,numberCount,lighting){
+
+ let score=0;
+
+ if(receiptFound) score+=0.45;
+
+ if(numberCount>0) score+=Math.min(0.35,numberCount*0.05);
+
+ if(!lighting.dark && !lighting.glare) score+=0.2;
+
+ return score;
+}
+
+function analyzeLighting(canvas){
+
+ const ctx=canvas.getContext('2d');
+ const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+
+ let total=0;
+ let brightPixels=0;
+
+ for(let i=0;i<img.data.length;i+=4){
+  const r=img.data[i];
+  const g=img.data[i+1];
+  const b=img.data[i+2];
+
+  const lum=(r*0.299+g*0.587+b*0.114);
+
+  total+=lum;
+
+  if(lum>245) brightPixels++;
+ }
+
+ const avg=total/(img.data.length/4);
+
+ const glareRatio=brightPixels/(img.data.length/4);
+
+ return{
+  dark:avg<60,
+  glare:glareRatio>0.12
+ };
 }
 
 // Fast edge detection used only for live detection
