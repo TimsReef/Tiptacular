@@ -23,6 +23,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Webpack JS
+        run: npm run build
+
       - name: Prebuild Android
         run: npx cap add android
 
