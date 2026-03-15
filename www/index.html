@@ -731,6 +731,13 @@ function startRealtimeDetection(statusLabel){
  const canvas=document.createElement('canvas');
  const ctx=canvas.getContext('2d');
 
+ const overlay=document.createElement('canvas');
+ const octx=overlay.getContext('2d');
+ Object.assign(overlay.style,{
+  position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none'
+ });
+ scannerOverlay.appendChild(overlay);
+
  detectTimer=setInterval(()=>{
 
   if(!scannerVideo.videoWidth) return;
@@ -738,13 +745,29 @@ function startRealtimeDetection(statusLabel){
   canvas.width=scannerVideo.videoWidth;
   canvas.height=scannerVideo.videoHeight;
 
+  overlay.width=scannerVideo.videoWidth;
+  overlay.height=scannerVideo.videoHeight;
+
   ctx.drawImage(scannerVideo,0,0);
 
-  const found=detectReceiptEdges(canvas);
+  const receiptFound=detectReceiptEdges(canvas);
 
-  if(found){
+  // Detect numeric text regions
+  const numberRegions=detectNumberRegions(canvas);
+
+  octx.clearRect(0,0,overlay.width,overlay.height);
+
+  // draw detected numeric areas
+  octx.strokeStyle='rgba(0,255,120,.9)';
+  octx.lineWidth=3;
+
+  numberRegions.forEach(r=>{
+   octx.strokeRect(r.x,r.y,r.w,r.h);
+  });
+
+  if(receiptFound && numberRegions.length>0){
    stableFrames++;
-   statusLabel.innerText='Hold steady…';
+   statusLabel.innerText='Receipt detected – hold steady…';
   }else{
    stableFrames=0;
    statusLabel.innerText='Align receipt inside frame';
@@ -768,6 +791,45 @@ function startRealtimeDetection(statusLabel){
   }
 
  },120);
+}
+
+// Detect candidate number regions (fast OpenCV pass)
+function detectNumberRegions(canvas){
+
+ if(typeof cv==='undefined') return [];
+
+ const src=cv.imread(canvas);
+ const gray=new cv.Mat();
+ const thresh=new cv.Mat();
+
+ cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+ cv.adaptiveThreshold(gray,thresh,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY_INV,15,3);
+
+ const contours=new cv.MatVector();
+ const hierarchy=new cv.Mat();
+
+ cv.findContours(thresh,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+
+ const regions=[];
+
+ for(let i=0;i<contours.size();i++){
+
+  const rect=cv.boundingRect(contours.get(i));
+
+  if(rect.width<40||rect.height<18) continue;
+  if(rect.width>canvas.width*0.8) continue;
+
+  const aspect=rect.width/rect.height;
+
+  if(aspect>1.2 && aspect<8){
+   regions.push({x:rect.x,y:rect.y,w:rect.width,h:rect.height});
+  }
+ }
+
+ src.delete();gray.delete();thresh.delete();
+ contours.delete();hierarchy.delete();
+
+ return regions;
 }
 
 // Fast edge detection used only for live detection
