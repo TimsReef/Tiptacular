@@ -767,16 +767,21 @@ function startRealtimeDetection(statusLabel){
 
   const lighting=analyzeLighting(canvas);
 
-  const confidence=computeScanConfidence(receiptFound,numberRegions.length,lighting);
+  const blurScore=detectBlur(canvas);
+
+  const confidence=computeScanConfidence(receiptFound,numberRegions.length,lighting,blurScore);
 
   // draw lighting warning
-  if(lighting.glare){
+  if(blurScore<80){
+    statusLabel.innerText='Hold camera steady';
+    stableFrames=0;
+  }else if(lighting.glare){
     statusLabel.innerText='Reduce glare';
     stableFrames=0;
   }else if(lighting.dark){
     statusLabel.innerText='Increase lighting';
     stableFrames=0;
-  }else if(confidence>0.7){
+  }else if(confidence>0.72){
     stableFrames++;
     statusLabel.innerText='Receipt detected – hold steady…';
   }else{
@@ -847,7 +852,7 @@ function detectNumberRegions(canvas){
 // Scan Confidence + Lighting Analysis
 // -----------------------------
 
-function computeScanConfidence(receiptFound,numberCount,lighting){
+function computeScanConfidence(receiptFound,numberCount,lighting,blurScore){
 
  let score=0;
 
@@ -856,6 +861,9 @@ function computeScanConfidence(receiptFound,numberCount,lighting){
  if(numberCount>0) score+=Math.min(0.35,numberCount*0.05);
 
  if(!lighting.dark && !lighting.glare) score+=0.2;
+
+ if(blurScore>120) score+=0.15;
+ else if(blurScore>90) score+=0.08;
 
  return score;
 }
@@ -888,6 +896,64 @@ function analyzeLighting(canvas){
   dark:avg<60,
   glare:glareRatio>0.12
  };
+}
+
+// -----------------------------
+// Blur Detection + Frame Sharpening
+// -----------------------------
+
+function detectBlur(canvas){
+
+ if(typeof cv==='undefined') return 150;
+
+ const src=cv.imread(canvas);
+ const gray=new cv.Mat();
+ const lap=new cv.Mat();
+ const mean=new cv.Mat();
+ const stddev=new cv.Mat();
+
+ cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+ cv.Laplacian(gray,lap,cv.CV_64F);
+
+ cv.meanStdDev(lap,mean,stddev);
+
+ const variance=stddev.doubleAt(0,0)*stddev.doubleAt(0,0);
+
+ src.delete();
+ gray.delete();
+ lap.delete();
+ mean.delete();
+ stddev.delete();
+
+ return variance;
+}
+
+function sharpenFrame(canvas){
+
+ if(typeof cv==='undefined') return canvas;
+
+ const src=cv.imread(canvas);
+ const dst=new cv.Mat();
+
+ const kernel=cv.matFromArray(3,3,cv.CV_32F,[
+  0,-1,0,
+ -1,5,-1,
+  0,-1,0
+ ]);
+
+ cv.filter2D(src,dst,cv.CV_8U,kernel);
+
+ const result=document.createElement('canvas');
+ result.width=canvas.width;
+ result.height=canvas.height;
+
+ cv.imshow(result,dst);
+
+ src.delete();
+ dst.delete();
+ kernel.delete();
+
+ return result;
 }
 
 // Fast edge detection used only for live detection

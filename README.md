@@ -16,22 +16,20 @@ The real-time receipt scanner pipeline
 
 Camera preview
       ↓
-OpenCV edge detection
+Receipt edge detection
       ↓
-Numeric region detection
+Numeric text detection
       ↓
 Lighting analysis
       ↓
-Confidence scoring
+Blur detection
       ↓
-Receipt stabilized
+Confidence scoring
       ↓
 Auto capture
       ↓
 Perspective correction
       ↓
-Text region detection
-      ↓
-ML Kit OCR
+Text region OCR
       ↓
 Total extraction
