@@ -30,7 +30,7 @@ jobs:
         run: npx cap add android
 
       - name: Create Assets
-        run: npx capacitor-assets generate --android -pwa
+        run: npx capacitor-assets generate --android --pwa
 
       - name: Android Configuration Settings
         run: echo "y" | npx trapeze run configure.yaml --android
