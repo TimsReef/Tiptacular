@@ -16,7 +16,6 @@
    THEMES
 ------------------------------*/
 
-/* Transparent glass */
 body.transparent{
 --text:#0f172a;
 --muted:#475569;
@@ -25,21 +24,8 @@ body.transparent{
 --button:rgba(255,255,255,.22);
 --border:rgba(255,255,255,.35);
 --shadow:0 10px 30px rgba(0,0,0,.25);
-
-/* true glass effect — no background image */
 background:transparent;
 }
-
-/* NOTE: For real glass effect on device you must allow the native
-   WebView background to be transparent.
-
-   iOS (AppDelegate.swift or Capacitor config):
-   webView.isOpaque = false
-   webView.backgroundColor = .clear
-
-   Android (MainActivity):
-   bridge.getWebView().setBackgroundColor(Color.TRANSPARENT);
-*/
 
 body.light{
 --text:#0f172a;
@@ -49,7 +35,6 @@ body.light{
 --button:#e2e8f0;
 --border:#e2e8f0;
 --shadow:0 8px 20px rgba(0,0,0,.10);
-
 background:linear-gradient(180deg,#f6f8fb,#eef2f7);
 }
 
@@ -61,19 +46,17 @@ body.dark{
 --button:#1f2937;
 --border:#374151;
 --shadow:0 10px 26px rgba(0,0,0,.45);
-
 background:linear-gradient(180deg,#0f172a,#020617);
 }
 
 html,body{
 height:100%;
-margin:0;  
+margin:0;
 font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 color:var(--text);
 overflow:hidden;
-}  
+}
 
-/* glass effect */
 body.transparent .card,
 body.transparent .key,
 body.transparent .icon-btn,
@@ -82,31 +65,31 @@ backdrop-filter:blur(22px) saturate(160%);
 -webkit-backdrop-filter:blur(22px) saturate(160%);
 }
 
+/* -----------------------------
+   APP FRAME
+------------------------------*/
+
 .app{
 width:100%;
 height:100dvh;
-min-height:100dvh;
 display:flex;
 flex-direction:column;
-
-/* Fluid safe‑area scaling for modern devices (Dynamic Island, Android edge displays) */
 padding:
 max(env(safe-area-inset-top),8px)
 max(env(safe-area-inset-right),12px)
 max(env(safe-area-inset-bottom),10px)
 max(env(safe-area-inset-left),12px);
-
-gap:clamp(10px,1.6vh,16px);
+gap:clamp(10px,1.5vh,16px);
 box-sizing:border-box;
 }
 
 .header{
 font-size:20px;
 font-weight:700;
-padding:0 6px;
 display:flex;
 align-items:center;
 justify-content:space-between;
+padding:0 4px;
 }
 
 .header-actions{display:flex;gap:6px}
@@ -124,217 +107,211 @@ justify-content:center;
 font-size:16px;
 }
 
-.icon-btn:active{transform:scale(.92)}
+/* -----------------------------
+   LAYOUT
+------------------------------*/
 
 .main{
 flex:1;
+display:grid;
+grid-template-rows:auto auto 1fr;
+gap:clamp(10px,1.4vh,16px);
+min-height:0;
+}
+
+.left-panel{
 display:flex;
 flex-direction:column;
-gap:12px;
+gap:clamp(10px,1.4vh,16px);
 min-height:0;
-height:100%;
 }
+
+.right-panel{
+display:flex;
+flex-direction:column;
+min-height:0;
+gap:clamp(8px,1.2vh,14px);
+}
+
+/* -----------------------------
+   CARDS
+------------------------------*/
 
 .card{
 background:var(--card);
 border-radius:var(--radius);
-padding:14px;
+padding:clamp(12px,1.8vh,18px);
 box-shadow:var(--shadow);
 border:1px solid var(--border);
 }
 
 .display{
-font-size:clamp(22px,4vw,30px);
+font-size:clamp(26px,4.5vh,40px);
 font-weight:700;
-text-align:right;
-margin-bottom:8px;
-white-space:nowrap;
-overflow:hidden;
-text-overflow:ellipsis;
+margin-bottom:clamp(10px,1.4vh,14px);
+text-align: right;
 }
 
-.controls{display:flex;gap:8px}
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:clamp(10px,1.4vh,14px);
+}
 
 .control{
-flex:1;
 background:var(--button);
 border-radius:12px;
-padding:8px;
+padding:10px;
 text-align:center;
 }
 
-.control-title{font-size:11px;color:var(--muted)}
-.control-value{font-size:18px;font-weight:600;margin:4px 0}
+.control-title{
+font-size:12px;
+color:var(--muted);
+}
 
-.control-buttons{display:flex}
+.control-value{
+font-size:18px;
+font-weight:600;
+margin:4px 0;
+}
+
+.control-buttons{
+display:flex;
+justify-content:center;
+gap:6px;
+}
 
 .control-buttons button{
-flex:1;border:none;background:var(--card);color:var(--text);
-border-radius:8px;margin:2px;padding:4px;font-size:16px;
+border:none;
+background:var(--card);
+border-radius:8px;
+width:28px;
+height:28px;
 }
 
-.tip-selector{display:flex;gap:6px;margin-top:8px}
+.tip-selector{
+display:flex;
+gap:8px;
+margin-top:10px;
+}
 
 .tip-btn{
-flex:1;border:none;background:var(--button);color:var(--text);
-padding:6px 0;border-radius:10px;font-size:12px;
+flex:1;
+border:none;
+border-radius:10px;
+padding:8px 0;
+background:var(--button);
 }
 
-.tip-btn.active{background:var(--accent);color:#fff;font-weight:600}
+.tip-btn.active{
+background:var(--accent);
+color:white;
+}
+
+/* -----------------------------
+   RESULTS
+------------------------------*/
 
 .results{
-flex-shrink:0;
-
 display:grid;
-grid-template-columns:1fr 1fr;
+grid-template-columns:1fr auto;
 row-gap:8px;
-column-gap:12px;
-font-size:17px;
+column-gap:8px;
+font-size:clamp(14px,2vh,17px);
 }
 
-.results .label{color:var(--muted)}
-.results .value{text-align:right;font-weight:600}
-.results .total{font-size:22px;font-weight:700}
+.label{color:var(--muted)}
+
+.value{
+text-align:right;
+font-weight:600;
+}
+
+.total{
+font-size:clamp(18px,2.6vh,22px);
+font-weight:700;
+}
 
 .round-row{
-grid-column:span 2;
+grid-column:1/-1;
 display:flex;
 justify-content:space-between;
 align-items:center;
-font-size:13px;
+margin-top:8px;
 }
 
-.round-options{display:flex;gap:4px}
+.round-options{display:flex;gap:6px}
 
 .round-btn{
-border:none;background:var(--button);color:var(--text);
-border-radius:8px;padding:3px 8px;font-size:12px;
+border:none;
+background:var(--button);
+border-radius:8px;
+padding:4px 10px;
 }
 
-.round-btn.active{background:var(--accent);color:#fff;font-weight:600}
+.round-btn.active{
+background:var(--accent);
+color:white;
+}
 
-/* Keypad fills remaining screen */
+/* -----------------------------
+   KEYPAD
+------------------------------*/
+
 .keypad{
 flex:1;
 display:grid;
 grid-template-columns:repeat(3,1fr);
-width:100%;
-height:100%;
-gap:12px;
+grid-template-rows:repeat(4,1fr);
+gap:clamp(8px,1.2vh,14px);
 min-height:0;
 }
 
-/* Adaptive keypad geometry */
-@media (orientation: portrait){
-.keypad{
- grid-auto-rows:minmax(64px,1fr);
-}
-.key{
- font-size:clamp(22px,5.5vh,34px);
- border-radius:18px;
-}
-}
-
-@media (orientation: landscape){
-.keypad{
- grid-auto-rows:minmax(52px,1fr);
-}
-.key{
- font-size:clamp(20px,4vh,30px);
- border-radius:16px;
-}
-}
-
-
 .key{
 border:none;
-border-radius:16px;
-font-size:clamp(22px,5vh,30px);
+border-radius:clamp(12px,1.6vh,18px);
+font-size:clamp(22px,5vh,32px);
 background:var(--key);
 color:var(--text);
 box-shadow:var(--shadow);
-display:flex;align-items:center;justify-content:center;
-}
-
-.key:active{transform:scale(.92)}
-
-.swipe-hint{text-align:center;font-size:11px;color:var(--muted)}
-
-/* Landscape layout improvements */
-@media (orientation: landscape){
-
-.main{
-flex-direction:row;
-height:100%;
-}
-
-.left-panel{
-flex:1.15;
 display:flex;
-flex-direction:column;
-gap:12px;
-min-width:0;
-}
-
-.right-panel{
-flex:0.85;
-display:flex;
-flex-direction:column;
-gap:10px;
-min-width:0;
-}
-
-/* hide tip quick buttons to save vertical space */
-.tip-selector{
-display:none;
-}
-
-.results{
-font-size:16px;
-}
-
-.results .total{
-font-size:20px;
-}
-
-.keypad{
-flex:1;
-height:100%;
-}
-
-}
-
-/* Portrait keypad slightly shorter to prevent result clipping */
-@media (orientation: portrait){
-.keypad{
-flex:0.92;
-}
-}
-
-/* -----------------------------
-   Premium Button Press Animation
-------------------------------*/
-.key{
-transition:
-transform .08s ease,
-box-shadow .08s ease,
-filter .08s ease;
+align-items:center;
+justify-content:center;
+transition:transform .08s ease,box-shadow .08s ease,filter .08s ease;
 }
 
 .key:active{
 transform:translateY(2px) scale(.96);
-box-shadow:0 2px 6px rgba(0,0,0,.25) inset,
-           0 3px 8px rgba(0,0,0,.18);
+box-shadow:0 2px 6px rgba(0,0,0,.25) inset,0 3px 8px rgba(0,0,0,.18);
 filter:brightness(.96);
 }
 
-.icon-btn{
-transition:transform .08s ease, box-shadow .08s ease;
+.swipe-hint{
+text-align:center;
+font-size:11px;
+color:var(--muted);
 }
 
-.icon-btn:active{
-transform:translateY(1px) scale(.95);
-box-shadow:0 2px 6px rgba(0,0,0,.25) inset;
+/* -----------------------------
+   LANDSCAPE
+------------------------------*/
+
+@media (orientation: landscape){
+
+.main{
+grid-template-columns:1.1fr .9fr;
+grid-template-rows:1fr;
+}
+
+.left-panel{
+height:100%;
+}
+
+.tip-selector{
+display:none;
+}
+
 }
 
 </style>
