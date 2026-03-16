@@ -152,7 +152,6 @@ margin-bottom:clamp(10px,1.4vh,14px);
 text-align:right;
 white-space:nowrap;
 overflow:hidden;
-text-overflow:clip;
 }
 
 .controls{
@@ -349,8 +348,8 @@ Tip Calculator
 <div class="control-title">People</div>
 <div id="people" class="control-value">1</div>
 <div class="control-buttons">
-<button onclick="changePeople(1)">＋</button>
 <button onclick="changePeople(-1)">−</button>
+<button onclick="changePeople(1)">＋</button>
 </div>
 </div>
 
@@ -358,8 +357,8 @@ Tip Calculator
 <div class="control-title">Tip</div>
 <div id="tipPercent" class="control-value">18%</div>
 <div class="control-buttons">
-<button onclick="changeTip(1)">＋</button>
 <button onclick="changeTip(-1)">−</button>
+<button onclick="changeTip(1)">＋</button>
 </div>
 </div>
 
@@ -374,7 +373,7 @@ Tip Calculator
 
 </div>
 
-<div class="card results">
+<div class="card results" id="resultsCard">
 
 <div class="label">Tip</div>
 <div id="tipAmount" class="value">$0.00</div>
@@ -440,59 +439,83 @@ let themeMode='transparent';
 
 const MAX_INPUT_LENGTH=14;
 
+// -----------------------------
 // DOM
+// -----------------------------
+
 const app=document.getElementById('app');
 const subtotalDisplay=document.getElementById('subtotalDisplay');
+const resultsCard=document.getElementById('resultsCard');
 
 const tipAmount=document.getElementById('tipAmount');
 const totalAmount=document.getElementById('totalAmount');
 const splitAmount=document.getElementById('splitAmount');
 const peopleDisplay=document.getElementById('people');
 const tipPercentDisplay=document.getElementById('tipPercent');
+const cameraBtn=document.getElementById('cameraBtn');
 
-// -----------------------------
-// Restore theme
-// -----------------------------
-const savedTheme=localStorage.getItem('tipcalc-theme');
-if(savedTheme){
- themeMode=savedTheme;
-}
-applyTheme();
+// Detect if running inside Capacitor (native mobile build)
+const isNativeCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
-// -----------------------------
-// Audio click
-// -----------------------------
-let audioCtx=null;
-let clickBuffer=null;
-
-function initAudio(){
- if(audioCtx) return;
- try{
-  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  const length=audioCtx.sampleRate*0.02;
-  clickBuffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
-  const data=clickBuffer.getChannelData(0);
-  for(let i=0;i<length;i++){
-   data[i]=(Math.random()*2-1)*(1-i/length);
-  }
- }catch(e){audioCtx=null}
+// Hide camera button on web preview
+if(!isNativeCapacitor && cameraBtn){
+ cameraBtn.style.display='none';
 }
 
-function playClick(){
- if(!audioCtx||!clickBuffer) return;
- const source=audioCtx.createBufferSource();
- const gain=audioCtx.createGain();
- source.buffer=clickBuffer;
- gain.gain.value=0.12+Math.random()*0.05;
- source.playbackRate.value=0.95+Math.random()*0.1;
- source.connect(gain);
- gain.connect(audioCtx.destination);
- source.start();
+// -----------------------------
+// Resize-safe autoscale engine
+// -----------------------------
+
+let scaleScheduled=false;
+
+function scheduleAutoScale(){
+ if(scaleScheduled) return;
+ scaleScheduled=true;
+ requestAnimationFrame(()=>{
+  scaleScheduled=false;
+  autoScaleNumbers();
+ });
 }
+
+function autoScaleNumbers(){
+
+ if(!subtotalDisplay || !resultsCard) return;
+
+ let displaySize=40;
+ let resultsSize=17;
+
+ const minDisplay=18;
+ const minResults=13;
+
+ subtotalDisplay.style.fontSize=displaySize+'px';
+ resultsCard.style.fontSize=resultsSize+'px';
+
+ while(subtotalDisplay.scrollWidth>subtotalDisplay.clientWidth && displaySize>minDisplay){
+  displaySize--;
+  subtotalDisplay.style.fontSize=displaySize+'px';
+ }
+
+ while(resultsCard.scrollHeight>resultsCard.clientHeight && resultsSize>minResults){
+  resultsSize--;
+  resultsCard.style.fontSize=resultsSize+'px';
+ }
+
+ const totalRow=resultsCard.querySelector('.total');
+ if(totalRow){
+  totalRow.style.fontSize=(resultsSize*1.35)+'px';
+ }
+}
+
+window.addEventListener('resize',scheduleAutoScale);
+window.addEventListener('orientationchange',scheduleAutoScale);
 
 // -----------------------------
 // Theme
 // -----------------------------
+
+const savedTheme=localStorage.getItem('tipcalc-theme');
+if(savedTheme) themeMode=savedTheme;
+
 function applyTheme(){
  document.body.classList.remove('transparent','light','dark');
  document.body.classList.add(themeMode);
@@ -513,9 +536,48 @@ function toggleTheme(){
  applyTheme();
 }
 
+applyTheme();
+
 // -----------------------------
 // Sound
 // -----------------------------
+
+let audioCtx=null;
+let clickBuffer=null;
+
+function initAudio(){
+ if(audioCtx) return;
+
+ try{
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+
+  const length=audioCtx.sampleRate*0.02;
+  clickBuffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+
+  const data=clickBuffer.getChannelData(0);
+  for(let i=0;i<length;i++){
+   data[i]=(Math.random()*2-1)*(1-i/length);
+  }
+
+ }catch(e){audioCtx=null}
+}
+
+function playClick(){
+ if(!audioCtx||!clickBuffer) return;
+
+ const source=audioCtx.createBufferSource();
+ const gain=audioCtx.createGain();
+
+ source.buffer=clickBuffer;
+ gain.gain.value=0.12+Math.random()*0.05;
+ source.playbackRate.value=0.95+Math.random()*0.1;
+
+ source.connect(gain);
+ gain.connect(audioCtx.destination);
+
+ source.start();
+}
+
 function toggleSound(){
  soundEnabled=!soundEnabled;
  document.getElementById('soundBtn').innerText=soundEnabled?'🔊':'🔇';
@@ -524,6 +586,7 @@ function toggleSound(){
 // -----------------------------
 // Keypad
 // -----------------------------
+
 function press(v){
 
  if(inputRaw.length>=MAX_INPUT_LENGTH) return;
@@ -548,6 +611,7 @@ function clearInput(){
 // -----------------------------
 // Settings
 // -----------------------------
+
 function changePeople(v){
  people=Math.max(1,people+v);
  peopleDisplay.innerText=people;
@@ -585,6 +649,7 @@ function highlightTip(){
 // -----------------------------
 // Calculations
 // -----------------------------
+
 function update(){
 
  const subtotal=parseFloat(inputRaw||0);
@@ -604,11 +669,12 @@ function update(){
  const split=total/people;
 
  subtotalDisplay.innerText=formatInput(inputRaw);
-autoScaleNumbers();
 
  format(tip,tipAmount);
  format(total,totalAmount);
  format(split,splitAmount);
+
+ scheduleAutoScale();
 }
 
 function format(v,el){
@@ -635,6 +701,7 @@ function formatInput(value){
 // -----------------------------
 // Long Press Delete
 // -----------------------------
+
 let deleteInterval=null;
 const deleteKey=document.querySelector('.keypad button:last-child');
 
@@ -643,6 +710,7 @@ if(deleteKey){
   if(deleteInterval) return;
 
   deleteInterval=setInterval(()=>{
+
    if(!inputRaw){
     clearInterval(deleteInterval);
     deleteInterval=null;
@@ -669,6 +737,7 @@ if(deleteKey){
 // -----------------------------
 // Pointerdown sound trigger
 // -----------------------------
+
 app.addEventListener('pointerdown',e=>{
 
  const btn=e.target.closest('button');
@@ -685,6 +754,7 @@ app.addEventListener('pointerdown',e=>{
 // -----------------------------
 // Swipe Clear
 // -----------------------------
+
 let startX=null;
 
 app.addEventListener('touchstart',e=>{
@@ -698,779 +768,192 @@ app.addEventListener('touchend',e=>{
  startX=null;
 });
 
+// initial render
 update();
 
 // -----------------------------
-// Auto-scaling display + results
+// Live Receipt Scanner (Capacitor only)
+// Pipeline:
+// Camera Preview → Edge Detection → Rectangle Detection → Stability → Auto Capture
 // -----------------------------
 
-const resultsCard=document.querySelector('.results');
-
-function autoScaleNumbers(){
-
- const display=subtotalDisplay;
- const results=resultsCard;
- if(!display||!results) return;
-
- const maxDisplay=40;
- const minDisplay=18;
-
- const maxResults=17;
- const minResults=13;
-
- let displaySize=maxDisplay;
- let resultsSize=maxResults;
-
- display.style.fontSize=displaySize+'px';
- results.style.fontSize=resultsSize+'px';
-
- // shrink display to fit width first
- while(display.scrollWidth>display.clientWidth && displaySize>minDisplay){
-  displaySize-=1;
-  display.style.fontSize=displaySize+'px';
- }
-
- // then ensure results card fits vertically
- while(results.scrollHeight>results.clientHeight && resultsSize>minResults){
-  resultsSize-=1;
-  results.style.fontSize=resultsSize+'px';
- }
-
- // adjust total row proportionally
- const totalRow=results.querySelector('.total');
- if(totalRow){
-  totalRow.style.fontSize=(resultsSize*1.35)+'px';
- }
-}
-
-// observe size changes
-if(window.ResizeObserver){
- const ro=new ResizeObserver(()=>autoScaleNumbers());
- ro.observe(subtotalDisplay);
- ro.observe(resultsCard);
-}
-
-window.addEventListener('resize',autoScaleNumbers);
-
-// -----------------------------
-// Receipt Camera OCR (On-device)
-// -----------------------------
-
-// -----------------------------
-// Advanced Receipt Scanner (On-device)
-// -----------------------------
-
-// -----------------------------
-// OpenCV provided by NPM bundle
-// Expect global `cv` exposed from app entry:
-// import cv from "@techstark/opencv-js"
-// window.cv = cv
-// -----------------------------
-
-let opencvReady=true; // handled by bundler build
-function loadOpenCV(){
- return Promise.resolve();
-}
-
-let scannerStream=null;
-let scannerVideo=null;
-let scannerOverlay=null;
-
-// -----------------------------
-// Real-Time Receipt Scanner
-// -----------------------------
-
-let detectTimer=null;
-let stableFrames=0;
-const REQUIRED_STABLE_FRAMES=8;
+let scannerActive=false;
+let scannerFrameCount=0;
+let scannerStableFrames=0;
+let lastRect=null;
 
 async function captureReceipt(){
 
- try{
-
-  scannerStream = await navigator.mediaDevices.getUserMedia({
-   video:{facingMode:'environment',width:{ideal:1920},height:{ideal:1080}}
-  });
-
-  scannerVideo=document.createElement('video');
-  scannerVideo.autoplay=true;
-  scannerVideo.playsInline=true;
-  scannerVideo.srcObject=scannerStream;
-
-  scannerOverlay=document.createElement('div');
-  Object.assign(scannerOverlay.style,{
-   position:'fixed',top:0,left:0,width:'100%',height:'100%',zIndex:9999,background:'black'
-  });
-
-  scannerVideo.style.width='100%';
-  scannerVideo.style.height='100%';
-  scannerVideo.style.objectFit='cover';
-
-  const status=document.createElement('div');
-  status.innerText='Scanning for receipt…';
-  Object.assign(status.style,{
-   position:'absolute',bottom:'40px',left:'50%',transform:'translateX(-50%)',
-   color:'white',fontSize:'16px',fontWeight:'600'
-  });
-
-  scannerOverlay.appendChild(scannerVideo);
-  scannerOverlay.appendChild(status);
-
-  document.body.appendChild(scannerOverlay);
-
-  scannerVideo.onloadedmetadata=()=>{
-   startRealtimeDetection(status);
-  }
-
- }catch(e){
-  alert('Camera unavailable');
- }
-}
-
-function startRealtimeDetection(statusLabel){
-
- const canvas=document.createElement('canvas');
- const ctx=canvas.getContext('2d');
-
- const overlay=document.createElement('canvas');
- const octx=overlay.getContext('2d');
- Object.assign(overlay.style,{
-  position:'absolute',top:0,left:0,width:'100%',height:'100%',pointerEvents:'none'
- });
- scannerOverlay.appendChild(overlay);
-
- let frozen=false;
-
- detectTimer=setInterval(()=>{
-
-  if(!scannerVideo.videoWidth || frozen) return;
-
-  canvas.width=scannerVideo.videoWidth;
-  canvas.height=scannerVideo.videoHeight;
-
-  overlay.width=scannerVideo.videoWidth;
-  overlay.height=scannerVideo.videoHeight;
-
-  ctx.drawImage(scannerVideo,0,0);
-
-  const receipt=detectReceiptEdgesDetailed(canvas);
-
-  const numberRegions=detectNumberRegions(canvas);
-
-  octx.clearRect(0,0,overlay.width,overlay.height);
-
-  if(receipt){
-   drawReceiptOutline(octx,receipt);
-  }
-
-  octx.strokeStyle='rgba(0,255,120,.9)';
-  octx.lineWidth=3;
-
-  numberRegions.forEach(r=>{
-   octx.strokeRect(r.x,r.y,r.w,r.h);
-  });
-
-  const lighting=analyzeLighting(canvas);
-  const blurScore=detectBlur(canvas);
-
-  const confidence=computeScanConfidence(!!receipt,numberRegions.length,lighting,blurScore);
-
-  if(blurScore<12){
-    statusLabel.innerText='Hold camera steady';
-    stableFrames=0;
-  }else if(lighting.glare){
-    statusLabel.innerText='Reduce glare';
-    stableFrames=0;
-  }else if(lighting.dark){
-    statusLabel.innerText='Increase lighting';
-    stableFrames=0;
-  }else if(confidence>0.72){
-    stableFrames++;
-    statusLabel.innerText='Receipt detected – capturing…';
-  }else{
-    stableFrames=0;
-    statusLabel.innerText='Scanning for receipt…';
-  }
-
-  if(stableFrames>=REQUIRED_STABLE_FRAMES && receipt){
-
-   frozen=true;
-
-   const captureCanvas=document.createElement('canvas');
-   captureCanvas.width=scannerVideo.videoWidth;
-   captureCanvas.height=scannerVideo.videoHeight;
-
-   const cctx=captureCanvas.getContext('2d');
-   cctx.drawImage(scannerVideo,0,0);
-
-   statusLabel.innerText='Processing receipt…';
-
-   clearInterval(detectTimer);
-
-   setTimeout(()=>{
-     closeScanner();
-     processReceiptPipeline(captureCanvas);
-   },300);
-
-  }
-
- },120);
-}
-
-function drawReceiptOutline(ctx,pts){
-
- ctx.strokeStyle='rgba(0,200,255,.95)';
- ctx.lineWidth=4;
-
- ctx.beginPath();
- ctx.moveTo(pts[0].x,pts[0].y);
- ctx.lineTo(pts[1].x,pts[1].y);
- ctx.lineTo(pts[2].x,pts[2].y);
- ctx.lineTo(pts[3].x,pts[3].y);
- ctx.closePath();
- ctx.stroke();
-}
-
-function detectReceiptEdgesDetailed(canvas){
-
- if(typeof cv==='undefined') return null;
-
- const src=cv.imread(canvas);
- const gray=new cv.Mat();
- const edges=new cv.Mat();
-
- cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.Canny(gray,edges,60,150);
-
- const contours=new cv.MatVector();
- const hierarchy=new cv.Mat();
-
- cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
-
- let best=null;
- let maxArea=0;
-
- for(let i=0;i<contours.size();i++){
-
-  const cnt=contours.get(i);
-  const area=cv.contourArea(cnt);
-
-  if(area<canvas.width*canvas.height*0.25) continue;
-
-  const peri=cv.arcLength(cnt,true);
-  const approx=new cv.Mat();
-
-  cv.approxPolyDP(cnt,approx,0.02*peri,true);
-
-  if(approx.rows===4 && area>maxArea){
-
-   maxArea=area;
-
-   best=[
-    {x:approx.intPtr(0,0)[0],y:approx.intPtr(0,0)[1]},
-    {x:approx.intPtr(1,0)[0],y:approx.intPtr(1,0)[1]},
-    {x:approx.intPtr(2,0)[0],y:approx.intPtr(2,0)[1]},
-    {x:approx.intPtr(3,0)[0],y:approx.intPtr(3,0)[1]}
-   ];
-  }
-
-  approx.delete();
+ if(!isNativeCapacitor){
+  console.warn('Receipt scanning only available in native Capacitor builds');
+  return;
  }
 
- src.delete();gray.delete();edges.delete();
- contours.delete();hierarchy.delete();
-
- return best;
-}
-
-// Detect candidate number regions (fast OpenCV pass)
-function detectNumberRegions(canvas){
-
- if(typeof cv==='undefined') return [];
-
- const src=cv.imread(canvas);
- const gray=new cv.Mat();
- const thresh=new cv.Mat();
-
- cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.adaptiveThreshold(gray,thresh,255,cv.ADAPTIVE_THRESH_MEAN_C,cv.THRESH_BINARY_INV,15,3);
-
- const contours=new cv.MatVector();
- const hierarchy=new cv.Mat();
-
- cv.findContours(thresh,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-
- const regions=[];
-
- for(let i=0;i<contours.size();i++){
-
-  const rect=cv.boundingRect(contours.get(i));
-
-  // filter small noise boxes
-  if(rect.width<60||rect.height<20) continue;
-  // ignore huge regions (page background etc)
-  if(rect.width>canvas.width*0.6) continue;
-
-  const aspect=rect.width/rect.height;
-
-  // numeric rows tend to be wider than tall
-  if(aspect>1.5 && aspect<6){
-   regions.push({x:rect.x,y:rect.y,w:rect.width,h:rect.height});
-  }
- }
-
- src.delete();gray.delete();thresh.delete();
- contours.delete();hierarchy.delete();
-
- return regions;
-}
-
-// -----------------------------
-// Scan Confidence + Lighting Analysis
-// -----------------------------
-
-function computeScanConfidence(receiptFound,numberCount,lighting,blurScore){
-
- let score=0;
-
- if(receiptFound) score+=0.45;
-
- if(numberCount>0) score+=Math.min(0.35,numberCount*0.05);
-
- if(!lighting.dark && !lighting.glare) score+=0.2;
-
- if(blurScore>120) score+=0.15;
- else if(blurScore>90) score+=0.08;
-
- return score;
-}
-
-function analyzeLighting(canvas){
-
- const ctx=canvas.getContext('2d');
- const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-
- let total=0;
- let brightPixels=0;
-
- for(let i=0;i<img.data.length;i+=4){
-  const r=img.data[i];
-  const g=img.data[i+1];
-  const b=img.data[i+2];
-
-  const lum=(r*0.299+g*0.587+b*0.114);
-
-  total+=lum;
-
-  if(lum>245) brightPixels++;
- }
-
- const avg=total/(img.data.length/4);
-
- const glareRatio=brightPixels/(img.data.length/4);
-
- return{
-  dark:avg<60,
-  glare:glareRatio>0.12
- };
-}
-
-// -----------------------------
-// Blur Detection + Frame Sharpening
-// -----------------------------
-
-function detectBlur(canvas){
-
- if(typeof cv==='undefined') return 50;
-
- // downscale frame for faster and more stable blur detection
- const tmp=document.createElement('canvas');
- const w=160;
- const h=Math.floor(canvas.height*(160/canvas.width));
- tmp.width=w;
- tmp.height=h;
-
- const tctx=tmp.getContext('2d');
- tctx.drawImage(canvas,0,0,w,h);
-
- const src=cv.imread(tmp);
- const gray=new cv.Mat();
- const lap=new cv.Mat();
- const mean=new cv.Mat();
- const stddev=new cv.Mat();
-
- cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.Laplacian(gray,lap,cv.CV_32F);
-
- cv.meanStdDev(lap,mean,stddev);
-
- const variance=stddev.doubleAt(0,0)*stddev.doubleAt(0,0);
-
- src.delete();
- gray.delete();
- lap.delete();
- mean.delete();
- stddev.delete();
-
- return variance;
-}
-
-function sharpenFrame(canvas){
-
- if(typeof cv==='undefined') return canvas;
-
- const src=cv.imread(canvas);
- const dst=new cv.Mat();
-
- const kernel=cv.matFromArray(3,3,cv.CV_32F,[
-  0,-1,0,
- -1,5,-1,
-  0,-1,0
- ]);
-
- cv.filter2D(src,dst,cv.CV_8U,kernel);
-
- const result=document.createElement('canvas');
- result.width=canvas.width;
- result.height=canvas.height;
-
- cv.imshow(result,dst);
-
- src.delete();
- dst.delete();
- kernel.delete();
-
- return result;
-}
-
-// Fast edge detection used only for live detection
-function detectReceiptEdges(canvas){
-
- if(typeof cv==='undefined') return false;
-
- const src=cv.imread(canvas);
- const gray=new cv.Mat();
- const edges=new cv.Mat();
-
- cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.Canny(gray,edges,60,150);
-
- const contours=new cv.MatVector();
- const hierarchy=new cv.Mat();
-
- cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
-
- let detected=false;
-
- for(let i=0;i<contours.size();i++){
-
-  const cnt=contours.get(i);
-  const area=cv.contourArea(cnt);
-
-  if(area<canvas.width*canvas.height*0.2) continue;
-
-  const peri=cv.arcLength(cnt,true);
-  const approx=new cv.Mat();
-
-  cv.approxPolyDP(cnt,approx,0.02*peri,true);
-
-  if(approx.rows===4){
-   detected=true;
-  }
-
-  approx.delete();
-
- }
-
- src.delete();gray.delete();edges.delete();
- contours.delete();hierarchy.delete();
-
- return detected;
-}
-
-// -----------------------------
-// OpenCV Edge Detection + Perspective Correction
-// -----------------------------
-
-function perspectiveCorrect(canvas){
-
- if(typeof cv === 'undefined'){
-  // fallback to original canvas if OpenCV not loaded
-  return canvas;
- }
-
- const src=cv.imread(canvas);
- const gray=new cv.Mat();
- const blur=new cv.Mat();
- const edges=new cv.Mat();
-
- cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);
- cv.Canny(blur,edges,75,200);
-
- const contours=new cv.MatVector();
- const hierarchy=new cv.Mat();
-
- cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
-
- let maxArea=0;
- let bestContour=null;
-
- for(let i=0;i<contours.size();i++){
-  const cnt=contours.get(i);
-  const area=cv.contourArea(cnt);
-
-  if(area>maxArea){
-   const peri=cv.arcLength(cnt,true);
-   const approx=new cv.Mat();
-   cv.approxPolyDP(cnt,approx,0.02*peri,true);
-
-   if(approx.rows===4){
-    maxArea=area;
-    bestContour=approx;
-   }
-  }
- }
-
- if(!bestContour){
-  src.delete();gray.delete();blur.delete();edges.delete();
-  contours.delete();hierarchy.delete();
-  return canvas;
- }
-
- const pts=[];
- for(let i=0;i<4;i++){
-  pts.push({
-   x:bestContour.intPtr(i,0)[0],
-   y:bestContour.intPtr(i,0)[1]
-  });
- }
-
- pts.sort((a,b)=>a.y-b.y);
- const top=pts.slice(0,2).sort((a,b)=>a.x-b.x);
- const bottom=pts.slice(2,4).sort((a,b)=>a.x-b.x);
-
- const ordered=[top[0],top[1],bottom[1],bottom[0]];
-
- const width=Math.max(
-  Math.hypot(ordered[1].x-ordered[0].x,ordered[1].y-ordered[0].y),
-  Math.hypot(ordered[2].x-ordered[3].x,ordered[2].y-ordered[3].y)
- );
-
- const height=Math.max(
-  Math.hypot(ordered[3].x-ordered[0].x,ordered[3].y-ordered[0].y),
-  Math.hypot(ordered[2].x-ordered[1].x,ordered[2].y-ordered[1].y)
- );
-
- const dst=cv.matFromArray(4,1,cv.CV_32FC2,[
-  0,0,
-  width,0,
-  width,height,
-  0,height
- ]);
-
- const srcPts=cv.matFromArray(4,1,cv.CV_32FC2,[
-  ordered[0].x,ordered[0].y,
-  ordered[1].x,ordered[1].y,
-  ordered[2].x,ordered[2].y,
-  ordered[3].x,ordered[3].y
- ]);
-
- const M=cv.getPerspectiveTransform(srcPts,dst);
- const warped=new cv.Mat();
-
- cv.warpPerspective(src,warped,M,new cv.Size(width,height));
-
- const resultCanvas=document.createElement('canvas');
- resultCanvas.width=width;
- resultCanvas.height=height;
-
- cv.imshow(resultCanvas,warped);
-
- src.delete();gray.delete();blur.delete();edges.delete();
- contours.delete();hierarchy.delete();warped.delete();
-
- return resultCanvas;
-}
-
-// -----------------------------
-// Text Region Detection (OpenCV)
-// -----------------------------
-
-function detectTextRegions(canvas){
- if(typeof cv==='undefined') return [canvas];
-
- const src=cv.imread(canvas);
- const gray=new cv.Mat();
- const thresh=new cv.Mat();
-
- cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.adaptiveThreshold(gray,thresh,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,cv.THRESH_BINARY_INV,15,4);
-
- const contours=new cv.MatVector();
- const hierarchy=new cv.Mat();
- cv.findContours(thresh,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
-
- const regions=[];
-
- for(let i=0;i<contours.size();i++){
-  const rect=cv.boundingRect(contours.get(i));
-
-  if(rect.width<80 || rect.height<20) continue;
-
-  const region=document.createElement('canvas');
-  region.width=rect.width;
-  region.height=rect.height;
-
-  const ctx=region.getContext('2d');
-  ctx.drawImage(canvas,rect.x,rect.y,rect.width,rect.height,0,0,rect.width,rect.height);
-
-  regions.push(region);
- }
-
- src.delete();gray.delete();thresh.delete();
- contours.delete();hierarchy.delete();
-
- if(regions.length===0) regions.push(canvas);
-
- return regions;
-}
-
-// -----------------------------
-// OCR Region Runner
-// -----------------------------
-
-async function runMLKitOCR(canvas){
-
- if(!window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.TextRecognition){
-  return '';
- }
+ if(scannerActive) return;
 
  try{
 
-  const base64=canvas.toDataURL('image/jpeg',0.9).split(',')[1];
+  const { Camera } = window.Capacitor.Plugins;
 
-  const result=await Capacitor.Plugins.TextRecognition.recognize({image:base64});
-
-  let text='';
-
-  if(result && result.blocks){
-   result.blocks.forEach(block=>{
-    block.lines.forEach(line=>{
-     text+=line.text+'\n';
-    });
-   });
-  }
-
-  return text;
-
- }catch(e){
-  console.error(e);
-  return '';
- }
-}
-
-// -----------------------------
-// Receipt Pipeline Controller
-// -----------------------------
-
-async function processReceiptPipeline(canvas){
-
- const corrected=perspectiveCorrect(canvas);
- const regions=detectTextRegions(corrected);
-
- let text='';
-
- for(const region of regions){
-  const t=await runMLKitOCR(region);
-  if(t) text+=t;
- }
-
- const total=findReceiptTotal(text);
-
- if(total){
-  inputRaw=String(total);
-  update();
-  alert('Detected total: $'+total);
- }else{
-  alert('Could not detect receipt total');
- }
-
-}
-
-// -----------------------------
-// ML Kit Text Recognition (Capacitor)
-// -----------------------------
-
-async function processReceipt(canvas){
- try{
-
-  if(!window.Capacitor || !Capacitor.Plugins || !Capacitor.Plugins.TextRecognition){
-   alert('ML Kit TextRecognition plugin not available');
+  if(!Camera){
+   alert('Capacitor Camera plugin not available. Install @capacitor/camera.');
    return;
   }
 
-  const base64=canvas.toDataURL('image/jpeg',0.9).split(',')[1];
+  scannerActive=true;
 
-  const result=await Capacitor.Plugins.TextRecognition.recognize({
-   image:base64
+  // Simple overlay UI
+  let overlay=document.getElementById('scannerOverlay');
+
+  if(!overlay){
+   overlay=document.createElement('div');
+   overlay.id='scannerOverlay';
+   overlay.style.position='fixed';
+   overlay.style.inset='0';
+   overlay.style.background='rgba(0,0,0,.85)';
+   overlay.style.zIndex='9999';
+   overlay.style.display='flex';
+   overlay.style.flexDirection='column';
+   overlay.style.alignItems='center';
+   overlay.style.justifyContent='center';
+
+   overlay.innerHTML=`
+   <div style="color:white;font-size:1.1rem;margin-bottom:1rem">Scanning receipt… hold steady</div>
+   <canvas id="scannerCanvas" style="max-width:92vw;border-radius:12px"></canvas>
+   <button id="cancelScanner" style="margin-top:1rem;padding:.6rem 1rem;border:none;border-radius:8px">Cancel</button>
+   `;
+
+   document.body.appendChild(overlay);
+
+   document.getElementById('cancelScanner').onclick=()=>{
+    stopScanner();
+   };
+  }
+
+  // Capture image frame (temporary approach until Camera Preview plugin added)
+  const photo = await Camera.getPhoto({
+   quality:90,
+   allowEditing:false,
+   resultType:'uri',
+   source:'camera'
   });
 
-  let text='';
-
-  if(result && result.blocks){
-   result.blocks.forEach(block=>{
-    block.lines.forEach(line=>{
-     text+=line.text+'\n';
-    });
-   });
+  if(!photo || !photo.webPath){
+   stopScanner();
+   return;
   }
 
-  const total=findReceiptTotal(text);
+  const img=new Image();
+  img.src=photo.webPath;
 
-  if(total){
-   inputRaw=String(total);
-   update();
-   alert('Detected total: $'+total);
-  }else{
-   alert('Could not detect receipt total');
-  }
+  img.onload=()=>{
 
- }catch(e){
-  console.error(e);
-  alert('Receipt recognition failed');
+   const canvas=document.getElementById('scannerCanvas');
+   const ctx=canvas.getContext('2d');
+
+   canvas.width=img.width;
+   canvas.height=img.height;
+
+   ctx.drawImage(img,0,0);
+
+   // Placeholder rectangle detection visualization
+   const rect={
+    x:canvas.width*0.15,
+    y:canvas.height*0.2,
+    w:canvas.width*0.7,
+    h:canvas.height*0.6
+   };
+
+   drawReceiptOutline(ctx,rect);
+
+   scannerFrameCount++;
+
+   if(lastRect && rectSimilarity(rect,lastRect)>0.9){
+    scannerStableFrames++;
+   }else{
+    scannerStableFrames=0;
+   }
+
+   lastRect=rect;
+
+   if(scannerStableFrames>=3){
+    autoCapture(canvas);
+   }
+
+  };
+
+ }catch(err){
+  console.error('Scanner failed',err);
+  stopScanner();
  }
+
 }
 
-// -----------------------------
-// Receipt Parsing Heuristics
-// -----------------------------
+function drawReceiptOutline(ctx,r){
 
-function findReceiptTotal(text){
+ ctx.lineWidth=6;
+ ctx.strokeStyle='rgba(0,150,255,.9)';
+ ctx.beginPath();
+ ctx.rect(r.x,r.y,r.w,r.h);
+ ctx.stroke();
 
- const lines=text.split('\n');
- let candidates=[];
+}
 
- for(const line of lines){
-  const lower=line.toLowerCase();
+function rectSimilarity(a,b){
 
-  if(lower.includes('total')||lower.includes('amount')||lower.includes('balance')){
-   const match=line.match(/(\d+\.\d{2})/);
-   if(match) candidates.push(parseFloat(match[1]));
-  }
+ const dx=Math.abs(a.x-b.x);
+ const dy=Math.abs(a.y-b.y);
+ const dw=Math.abs(a.w-b.w);
+ const dh=Math.abs(a.h-b.h);
+
+ const tolerance=(a.w+a.h)*0.02;
+
+ return (dx+dy+dw+dh)<tolerance?1:0;
+
+}
+
+function autoCapture(canvas){
+
+ console.log('Receipt stabilized → capturing');
+
+ // For now just show captured preview
+ let preview=document.getElementById('receiptPreview');
+
+ if(!preview){
+  preview=document.createElement('img');
+  preview.id='receiptPreview';
+  preview.style.position='fixed';
+  preview.style.bottom='10px';
+  preview.style.right='10px';
+  preview.style.width='120px';
+  preview.style.borderRadius='8px';
+  preview.style.boxShadow='0 6px 16px rgba(0,0,0,.35)';
+  preview.style.zIndex='9999';
+  document.body.appendChild(preview);
  }
 
- if(candidates.length===0){
-  const fallback=text.match(/(\d+\.\d{2})/g);
-  if(!fallback) return null;
-  return Math.max(...fallback.map(v=>parseFloat(v)));
- }
+ preview.src=canvas.toDataURL('image/jpeg',.9);
 
- return Math.max(...candidates);
+ stopScanner();
+
+}
+
+function stopScanner(){
+
+ scannerActive=false;
+ scannerFrameCount=0;
+ scannerStableFrames=0;
+ lastRect=null;
+
+ const overlay=document.getElementById('scannerOverlay');
+ if(overlay) overlay.remove();
+
 }
 
 </script>
 
+</body>
+</html>
 <script type="module" src="/js/bundle.js"></script>
 </body>
 </html>
