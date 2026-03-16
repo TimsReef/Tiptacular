@@ -18,6 +18,8 @@ Camera preview
       ↓
 Receipt edge detection
       ↓
+Blue receipt outline drawn
+      ↓
 Numeric text detection
       ↓
 Lighting analysis
