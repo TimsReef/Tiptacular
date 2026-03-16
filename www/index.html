@@ -772,7 +772,8 @@ function startRealtimeDetection(statusLabel){
   const confidence=computeScanConfidence(receiptFound,numberRegions.length,lighting,blurScore);
 
   // draw lighting warning
-  if(blurScore<80){
+  // blur detection tuned for mobile cameras
+  if(blurScore<12){
     statusLabel.innerText='Hold camera steady';
     stableFrames=0;
   }else if(lighting.glare){
@@ -832,12 +833,15 @@ function detectNumberRegions(canvas){
 
   const rect=cv.boundingRect(contours.get(i));
 
-  if(rect.width<40||rect.height<18) continue;
-  if(rect.width>canvas.width*0.8) continue;
+  // filter small noise boxes
+  if(rect.width<60||rect.height<20) continue;
+  // ignore huge regions (page background etc)
+  if(rect.width>canvas.width*0.6) continue;
 
   const aspect=rect.width/rect.height;
 
-  if(aspect>1.2 && aspect<8){
+  // numeric rows tend to be wider than tall
+  if(aspect>1.5 && aspect<6){
    regions.push({x:rect.x,y:rect.y,w:rect.width,h:rect.height});
   }
  }
@@ -904,16 +908,26 @@ function analyzeLighting(canvas){
 
 function detectBlur(canvas){
 
- if(typeof cv==='undefined') return 150;
+ if(typeof cv==='undefined') return 50;
 
- const src=cv.imread(canvas);
+ // downscale frame for faster and more stable blur detection
+ const tmp=document.createElement('canvas');
+ const w=160;
+ const h=Math.floor(canvas.height*(160/canvas.width));
+ tmp.width=w;
+ tmp.height=h;
+
+ const tctx=tmp.getContext('2d');
+ tctx.drawImage(canvas,0,0,w,h);
+
+ const src=cv.imread(tmp);
  const gray=new cv.Mat();
  const lap=new cv.Mat();
  const mean=new cv.Mat();
  const stddev=new cv.Mat();
 
  cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.Laplacian(gray,lap,cv.CV_64F);
+ cv.Laplacian(gray,lap,cv.CV_32F);
 
  cv.meanStdDev(lap,mean,stddev);
 
