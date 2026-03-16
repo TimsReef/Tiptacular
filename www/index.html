@@ -45,6 +45,7 @@ body.light{
 --text:#0f172a;
 --muted:#64748b;
 --card:#ffffff;
+--key:#f1f5f9;
 --button:#e2e8f0;
 --border:#e2e8f0;
 --shadow:0 8px 20px rgba(0,0,0,.10);
@@ -70,7 +71,7 @@ margin:0;
 font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
 color:var(--text);
 overflow:hidden;
-}
+}  
 
 /* glass effect */
 body.transparent .card,
@@ -262,18 +263,13 @@ display:flex;align-items:center;justify-content:center;
 /* Landscape layout improvements */
 @media (orientation: landscape){
 
-.app{
-width:100%;
-height:100dvh;
-}
-
 .main{
 flex-direction:row;
 height:100%;
 }
 
 .left-panel{
-flex:1.1;
+flex:1.15;
 display:flex;
 flex-direction:column;
 gap:12px;
@@ -281,15 +277,24 @@ min-width:0;
 }
 
 .right-panel{
-flex:0.9;
+flex:0.85;
 display:flex;
 flex-direction:column;
-gap:12px;
+gap:10px;
 min-width:0;
 }
 
+/* hide tip quick buttons to save vertical space */
+.tip-selector{
+display:none;
+}
+
 .results{
-overflow:visible;
+font-size:16px;
+}
+
+.results .total{
+font-size:20px;
 }
 
 .keypad{
@@ -299,67 +304,37 @@ height:100%;
 
 }
 
-.left-panel{
-flex:1.1;
-display:flex;
-flex-direction:column;
-gap:12px;
-min-width:0;
-}
-
-.right-panel{
-flex:0.9;
-display:flex;
-flex-direction:column;
-gap:12px;
-min-width:0;
-}
-
-.results{
-overflow:visible;
-}
-
+/* Portrait keypad slightly shorter to prevent result clipping */
+@media (orientation: portrait){
 .keypad{
-flex:1;
-height:100%;
+flex:0.92;
+}
 }
 
+/* -----------------------------
+   Premium Button Press Animation
+------------------------------*/
+.key{
+transition:
+transform .08s ease,
+box-shadow .08s ease,
+filter .08s ease;
 }
 
-.main{
-flex-direction:row;
-height:100%;
+.key:active{
+transform:translateY(2px) scale(.96);
+box-shadow:0 2px 6px rgba(0,0,0,.25) inset,
+           0 3px 8px rgba(0,0,0,.18);
+filter:brightness(.96);
 }
 
-.left-panel{
-flex:1;
-display:flex;
-flex-direction:column;
-gap:12px;
-min-height:0;
-flex:1;
-display:flex;
-flex-direction:column;
-gap:10px;
-overflow:hidden;
+.icon-btn{
+transition:transform .08s ease, box-shadow .08s ease;
 }
 
-.right-panel{
-flex:1;
-display:flex;
-flex-direction:column;
-gap:12px;
-min-height:0;
-flex:1;
-display:flex;
-flex-direction:column;
-gap:10px;
-}
-
-.results{
-flex-shrink:0;
-}
-
+.icon-btn:active{
+transform:translateY(1px) scale(.95);
+box-shadow:0 2px 6px rgba(0,0,0,.25) inset;
 }
 
 </style>
