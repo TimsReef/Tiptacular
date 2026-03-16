@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "build": "webpack --mode production",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,8 +11,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
+    "@capacitor-community/camera-preview": "^7.0.5",
     "@capacitor/android": "^8.2.0",
     "@capacitor/assets": "^3.0.5",
     "@capacitor/camera": "^8.0.2",
