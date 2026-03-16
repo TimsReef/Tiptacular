@@ -149,7 +149,10 @@ border:1px solid var(--border);
 font-size:clamp(26px,4.5vh,40px);
 font-weight:700;
 margin-bottom:clamp(10px,1.4vh,14px);
-text-align: right;
+text-align:right;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:clip;
 }
 
 .controls{
@@ -600,6 +603,7 @@ function update(){
  const split=total/people;
 
  subtotalDisplay.innerText=formatInput(inputRaw);
+autoScaleDisplay();
 
  format(tip,tipAmount);
  format(total,totalAmount);
@@ -694,6 +698,36 @@ app.addEventListener('touchend',e=>{
 });
 
 update();
+
+// -----------------------------
+// Auto-scaling display text
+// -----------------------------
+
+function autoScaleDisplay(){
+
+ const el=subtotalDisplay;
+ if(!el) return;
+
+ const max=40; // px
+ const min=18; // px
+
+ let size=max;
+ el.style.fontSize=size+'px';
+
+ // shrink until it fits
+ while(el.scrollWidth>el.clientWidth && size>min){
+  size-=1;
+  el.style.fontSize=size+'px';
+ }
+}
+
+// re-run when screen size changes
+if(window.ResizeObserver){
+ const ro=new ResizeObserver(()=>autoScaleDisplay());
+ ro.observe(subtotalDisplay);
+}
+
+window.addEventListener('resize',autoScaleDisplay);
 
 // -----------------------------
 // Receipt Camera OCR (On-device)
