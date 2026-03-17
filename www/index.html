@@ -874,7 +874,7 @@ async function startScanLoop(){
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const quad=detectReceiptQuad(canvas.width,canvas.height);
+    const quad=detectReceiptQuad(canvas.width,canvas.height,img);
 
     if(quad){
      drawQuad(ctx,quad);
@@ -938,7 +938,7 @@ function detectReceiptQuad(w,h,img){
 
    cv.approxPolyDP(cnt,approx,0.02*peri,true);
 
-   if(approx.rows===4){
+   if(approx.rows>=4 && approx.rows<=6){
 
     const rect=cv.boundingRect(approx);
     const area=rect.width*rect.height;
@@ -963,7 +963,7 @@ function detectReceiptQuad(w,h,img){
 
   if(!best) return null;
 
-  const minArea=(w*h)*0.12;
+  const minArea=(w*h)*0.10;
 
   if(bestArea<minArea) return null;
 
@@ -989,6 +989,74 @@ function drawQuad(ctx,q){
 
 }
 
+// Perspective correction
+function perspectiveCorrect(img){
+
+ if(!window.cv) return img.src;
+
+ try{
+
+  const src=cv.imread(img);
+  const dst=new cv.Mat();
+
+  const width=src.cols;
+  const height=src.rows;
+
+  const srcTri=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,width,0,width,height,0,height]);
+  const dstTri=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,width,0,width,height,0,height]);
+
+  const M=cv.getPerspectiveTransform(srcTri,dstTri);
+
+  cv.warpPerspective(src,dst,M,new cv.Size(width,height));
+
+  const canvas=document.createElement('canvas');
+  cv.imshow(canvas,dst);
+
+  src.delete();
+  dst.delete();
+  srcTri.delete();
+  dstTri.delete();
+  M.delete();
+
+  return canvas.toDataURL('image/jpeg',0.95);
+
+ }catch(e){
+  console.warn('perspective correction failed',e);
+  return img.src;
+ }
+
+}
+
+// OCR + total extraction
+async function detectReceiptTotal(imageData){
+
+ if(!window.Capacitor?.Plugins?.MLKitTextRecognition) return null;
+
+ try{
+
+  const { MLKitTextRecognition }=window.Capacitor.Plugins;
+
+  const result=await MLKitTextRecognition.recognizeText({
+   base64:imageData.split(',')[1]
+  });
+
+  if(!result?.text) return null;
+
+  const matches=result.text.match(/\\d+\\.\\d{2}/g);
+
+  if(!matches) return null;
+
+  const numbers=matches.map(v=>parseFloat(v));
+
+  return Math.max(...numbers);
+
+ }catch(e){
+  console.warn('MLKit OCR error',e);
+  return null;
+ }
+
+}
+
 function quadSimilarity(a,b){
 
  const dx=Math.abs(a.x-b.x);
@@ -1003,6 +1071,48 @@ function quadSimilarity(a,b){
 }
 
 async function autoCapture(base64){
+
+ console.log('Receipt stabilized → capturing');
+
+ const imgData="data:image/jpeg;base64,"+base64;
+
+ const img=new Image();
+ img.src=imgData;
+
+ img.onload=async ()=>{
+
+  const corrected=perspectiveCorrect(img);
+
+  let preview=document.getElementById('receiptPreview');
+
+  if(!preview){
+   preview=document.createElement('img');
+   preview.id='receiptPreview';
+   preview.style.position='fixed';
+   preview.style.bottom='10px';
+   preview.style.right='10px';
+   preview.style.width='120px';
+   preview.style.borderRadius='8px';
+   preview.style.boxShadow='0 6px 16px rgba(0,0,0,.35)';
+   preview.style.zIndex='9999';
+   document.body.appendChild(preview);
+  }
+
+  preview.src=corrected;
+
+  try{
+   const total=await detectReceiptTotal(corrected);
+   if(total){
+    inputRaw=String(total);
+    update();
+   }
+  }catch(e){console.warn('total detect fail',e)}
+
+ };
+
+ stopScanner();
+
+}
 
  console.log('Receipt stabilized → capturing');
 
