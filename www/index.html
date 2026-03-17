@@ -5,327 +5,327 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Tip Calculator</title>
     <style>
-                :root {
-                    --accent:#2563eb;
-                    --radius:18px;
-                    --shadow:0 8px 20px rgba(0,0,0,.12);
-                }
+        :root {
+            --accent:#2563eb;
+            --radius:18px;
+            --shadow:0 8px 20px rgba(0,0,0,.12);
+        }
 
-                /* -----------------------------
+        /* -----------------------------
            THEMES
         ------------------------------*/
 
-                body.transparent {
-                    --text:#0f172a;
-                    --muted:#475569;
-                    --card:rgba(255,255,255,.28);
-                    --key:rgba(255,255,255,.25);
-                    --button:rgba(255,255,255,.22);
-                    --border:rgba(255,255,255,.35);
-                    --shadow:0 10px 30px rgba(0,0,0,.25);
-                    background: transparent;
-                }
+        body.transparent {
+            --text:#0f172a;
+            --muted:#475569;
+            --card:rgba(255,255,255,.28);
+            --key:rgba(255,255,255,.25);
+            --button:rgba(255,255,255,.22);
+            --border:rgba(255,255,255,.35);
+            --shadow:0 10px 30px rgba(0,0,0,.25);
+            background: transparent;
+        }
 
-                body.light {
-                    --text:#0f172a;
-                    --muted:#64748b;
-                    --card:#ffffff;
-                    --key:#f1f5f9;
-                    --button:#e2e8f0;
-                    --border:#e2e8f0;
-                    --shadow:0 8px 20px rgba(0,0,0,.10);
-                    background: linear-gradient(180deg,#f6f8fb,#eef2f7);
-                }
+        body.light {
+            --text:#0f172a;
+            --muted:#64748b;
+            --card:#ffffff;
+            --key:#f1f5f9;
+            --button:#e2e8f0;
+            --border:#e2e8f0;
+            --shadow:0 8px 20px rgba(0,0,0,.10);
+            background: linear-gradient(180deg,#f6f8fb,#eef2f7);
+        }
 
-                body.dark {
-                    --text:#e5e7eb;
-                    --muted:#9ca3af;
-                    --card:#111827;
-                    --key:#1f2937;
-                    --button:#1f2937;
-                    --border:#374151;
-                    --shadow:0 10px 26px rgba(0,0,0,.45);
-                    background: linear-gradient(180deg,#0f172a,#020617);
-                }
+        body.dark {
+            --text:#e5e7eb;
+            --muted:#9ca3af;
+            --card:#111827;
+            --key:#1f2937;
+            --button:#1f2937;
+            --border:#374151;
+            --shadow:0 10px 26px rgba(0,0,0,.45);
+            background: linear-gradient(180deg,#0f172a,#020617);
+        }
 
-                html, body {
-                    height: 100%;
-                    margin: 0;
-                    font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-                    color: var(--text);
-                    overflow: hidden;
-                }
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            color: var(--text);
+            overflow: hidden;
+        }
 
-                    body.transparent .card,
-                    body.transparent .key,
-                    body.transparent .icon-btn,
-                    body.transparent .control {
-                        backdrop-filter: blur(22px) saturate(160%);
-                        -webkit-backdrop-filter: blur(22px) saturate(160%);
-                    }
+            body.transparent .card,
+            body.transparent .key,
+            body.transparent .icon-btn,
+            body.transparent .control {
+                backdrop-filter: blur(22px) saturate(160%);
+                -webkit-backdrop-filter: blur(22px) saturate(160%);
+            }
 
-                /* -----------------------------
+        /* -----------------------------
            APP FRAME
         ------------------------------*/
 
-                .app {
-                    width: 100%;
-                    height: 100dvh;
-                    display: flex;
-                    flex-direction: column;
-                    padding: max(env(safe-area-inset-top),8px) max(env(safe-area-inset-right),12px) max(env(safe-area-inset-bottom),10px) max(env(safe-area-inset-left),12px);
-                    gap: clamp(10px,1.5vh,16px);
-                    box-sizing: border-box;
-  /* Standard property */
-  user-select: none;
-  /* Vendor prefixes for cross-browser compatibility */
-  -webkit-user-select: none; /* Safari, Chrome, iOS */
-  -moz-user-select: none;    /* Firefox */
-  -ms-user-select: none;     /* Internet Explorer/Edge */
+        .app {
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            padding: max(env(safe-area-inset-top),8px) max(env(safe-area-inset-right),12px) max(env(safe-area-inset-bottom),10px) max(env(safe-area-inset-left),12px);
+            gap: clamp(10px,1.5vh,16px);
+            box-sizing: border-box;
+            /* Standard property */
+            user-select: none;
+            /* Vendor prefixes for cross-browser compatibility */
+            -webkit-user-select: none; /* Safari, Chrome, iOS */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
   
-  /* Change the cursor from text (I-beam) to default (arrow) */
-  cursor: default;
-                }
+            /* Change the cursor from text (I-beam) to default (arrow) */
+            cursor: default;
+        }
 
-                .header {
-                    font-size: 1.25rem;
-                    font-weight: 700;
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    padding: 0 4px;
-                }
+        .header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+        }
 
-                .header-actions {
-                    display: flex;
-                    gap: 0.4rem;
-                }
+        .header-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
 
-                .icon-btn {
-                    border: none;
-                    background: var(--button);
-                    color: var(--text);
-                    border-radius: 10px;
-                    width: 2.2rem;
-                    height: 2.2rem;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 1rem;
-                }
+        .icon-btn {
+            border: none;
+            background: var(--button);
+            color: var(--text);
+            border-radius: 10px;
+            width: 2.2rem;
+            height: 2.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
 
-                /* -----------------------------
+        /* -----------------------------
            LAYOUT
         ------------------------------*/
 
-                .main {
-                    flex: 1;
-                    display: grid;
-                    grid-template-rows: auto auto 1fr;
-                    gap: clamp(10px,1.4vh,16px);
-                    min-height: 0;
-                }
+        .main {
+            flex: 1;
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            gap: clamp(10px,1.4vh,16px);
+            min-height: 0;
+        }
 
-                .left-panel {
-                    display: flex;
-                    flex-direction: column;
-                    gap: clamp(10px,1.4vh,16px);
-                    min-height: 0;
-                }
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(10px,1.4vh,16px);
+            min-height: 0;
+        }
 
-                .right-panel {
-                    display: flex;
-                    flex-direction: column;
-                    min-height: 0;
-                    gap: clamp(8px,1.2vh,14px);
-                }
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            gap: clamp(8px,1.2vh,14px);
+        }
 
-                /* -----------------------------
+        /* -----------------------------
            CARDS
         ------------------------------*/
 
-                .card {
-                    background: var(--card);
-                    border-radius: var(--radius);
-                    padding: clamp(12px,1.8vh,18px);
-                    box-shadow: var(--shadow);
-                    border: 1px solid var(--border);
-                }
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: clamp(12px,1.8vh,18px);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
 
-                .display {
-                    font-size: clamp(26px,4.5vh,40px);
-                    font-weight: 700;
-                    margin-bottom: clamp(10px,1.4vh,14px);
-                    text-align: right;
-                    white-space: nowrap;
-                    overflow: hidden;
-                }
+        .display {
+            font-size: clamp(26px,4.5vh,40px);
+            font-weight: 700;
+            margin-bottom: clamp(10px,1.4vh,14px);
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+        }
 
-                .controls {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: clamp(10px,1.4vh,14px);
-                }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(10px,1.4vh,14px);
+        }
 
-                .control {
-                    background: var(--button);
-                    border-radius: 12px;
-                    padding: 0.65rem;
-                    text-align: center;
-                }
+        .control {
+            background: var(--button);
+            border-radius: 12px;
+            padding: 0.65rem;
+            text-align: center;
+        }
 
-                .control-title {
-                    font-size: 12px;
-                    color: var(--muted);
-                }
+        .control-title {
+            font-size: 12px;
+            color: var(--muted);
+        }
 
-                .control-value {
-                    font-size: 18px;
-                    font-weight: 600;
-                    margin: 4px 0;
-                }
+        .control-value {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 4px 0;
+        }
 
-                .control-buttons {
-                    display: flex;
-                    justify-content: center;
-                    gap: 1.0rem;
-                }
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+        }
 
-                    .control-buttons button {
-                        border: none;
-                        background: var(--card);
-                        border-radius: 8px;
-                        width: 28px;
-                        height: 28px;
-                    }
+            .control-buttons button {
+                border: none;
+                background: var(--card);
+                border-radius: 8px;
+                width: 28px;
+                height: 28px;
+            }
 
-                .tip-selector {
-                    display: flex;
-                    gap: 0.5rem;
-                    margin-top: 0.65rem;
-                }
+        .tip-selector {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.65rem;
+        }
 
-                .tip-btn {
-                    flex: 1;
-                    border: none;
-                    border-radius: 10px;
-                    padding: 0.5rem 0;
-                    background: var(--button);
-                }
+        .tip-btn {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 0.5rem 0;
+            background: var(--button);
+        }
 
-                    .tip-btn.active {
-                        background: var(--accent);
-                        color: white;
-                    }
+            .tip-btn.active {
+                background: var(--accent);
+                color: white;
+            }
 
-                /* -----------------------------
+        /* -----------------------------
            RESULTS
         ------------------------------*/
 
-                .results {
-                    display: grid;
-                    grid-template-columns: 1fr auto;
-                    row-gap: 0.5rem;
-                    column-gap: 0.5rem;
-                    font-size: clamp(14px,2vh,17px);
-                }
+        .results {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            row-gap: 0.5rem;
+            column-gap: 0.5rem;
+            font-size: clamp(14px,2vh,17px);
+        }
 
-                .label {
-                    color: var(--muted);
-                }
+        .label {
+            color: var(--muted);
+        }
 
-                .value {
-                    text-align: right;
-                    font-weight: 600;
-                }
+        .value {
+            text-align: right;
+            font-weight: 600;
+        }
 
-                .total {
-                    font-size: clamp(18px,2.6vh,22px);
-                    font-weight: 700;
-                }
+        .total {
+            font-size: clamp(18px,2.6vh,22px);
+            font-weight: 700;
+        }
 
-                .round-row {
-                    grid-column: 1/-1;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-top: 8px;
-                }
+        .round-row {
+            grid-column: 1/-1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
 
-                .round-options {
-                    display: flex;
-                    gap: 0.4rem;
-                }
+        .round-options {
+            display: flex;
+            gap: 0.4rem;
+        }
 
-                .round-btn {
-                    border: none;
-                    background: var(--button);
-                    border-radius: 8px;
-                    padding: 0.25rem 0.6rem;
-                }
+        .round-btn {
+            border: none;
+            background: var(--button);
+            border-radius: 8px;
+            padding: 0.25rem 0.6rem;
+        }
 
-                    .round-btn.active {
-                        background: var(--accent);
-                        color: white;
-                    }
+            .round-btn.active {
+                background: var(--accent);
+                color: white;
+            }
 
-                /* -----------------------------
+        /* -----------------------------
            KEYPAD
         ------------------------------*/
 
-                .keypad {
-                    flex: 1;
-                    display: grid;
-                    grid-template-columns: repeat(3,1fr);
-                    grid-template-rows: repeat(4,1fr);
-                    gap: clamp(8px,1.2vh,14px);
-                    min-height: 0;
-                }
+        .keypad {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            grid-template-rows: repeat(4,1fr);
+            gap: clamp(8px,1.2vh,14px);
+            min-height: 0;
+        }
 
-                .key {
-                    border: none;
-                    border-radius: clamp(12px,1.6vh,18px);
-                    font-size: clamp(22px,5vh,32px);
-                    background: var(--key);
-                    color: var(--text);
-                    box-shadow: var(--shadow);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    transition: transform .08s ease,box-shadow .08s ease,filter .08s ease;
-                }
+        .key {
+            border: none;
+            border-radius: clamp(12px,1.6vh,18px);
+            font-size: clamp(22px,5vh,32px);
+            background: var(--key);
+            color: var(--text);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform .08s ease,box-shadow .08s ease,filter .08s ease;
+        }
 
-                    .key:active {
-                        transform: translateY(2px) scale(.96);
-                        box-shadow: 0 2px 6px rgba(0,0,0,.25) inset,0 3px 8px rgba(0,0,0,.18);
-                        filter: brightness(.96);
-                    }
+            .key:active {
+                transform: translateY(2px) scale(.96);
+                box-shadow: 0 2px 6px rgba(0,0,0,.25) inset,0 3px 8px rgba(0,0,0,.18);
+                filter: brightness(.96);
+            }
 
-                .swipe-hint {
-                    text-align: center;
-                    font-size: 11px;
-                    color: var(--muted);
-                }
+        .swipe-hint {
+            text-align: center;
+            font-size: 11px;
+            color: var(--muted);
+        }
 
-                /* -----------------------------
+        /* -----------------------------
            LANDSCAPE
         ------------------------------*/
 
-                @media (orientation: landscape) {
+        @media (orientation: landscape) {
 
-                    .main {
-                        grid-template-columns: 1.1fr .9fr;
-                        grid-template-rows: 1fr;
-                    }
+            .main {
+                grid-template-columns: 1.1fr .9fr;
+                grid-template-rows: 1fr;
+            }
 
-                    .left-panel {
-                        height: 100%;
-                    }
+            .left-panel {
+                height: 100%;
+            }
 
-                    .tip-selector {
-                        display: none;
-                    }
-                }
+            .tip-selector {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -845,19 +845,14 @@ function handleAboutTap(){
 }
 
 function toggleCvDebug(){
-
-    cvDebugEnabled=!cvDebugEnabled;
-
-    const btn=document.getElementById("toggleCvDebugBtn");
-
-    if(btn){
-        btn.classList.toggle('active',cvDebugEnabled);
-        btn.innerText=cvDebugEnabled
-         ? "Disable CV Overlay"
-         : "Enable CV Overlay";
-    }
-
+ cvDebugEnabled=!cvDebugEnabled;
+ const btn=document.getElementById("toggleCvDebugBtn");
+ if(btn){
+  btn.classList.toggle('active',cvDebugEnabled);
+  btn.innerText=cvDebugEnabled?"CV Overlay: ON":"CV Overlay: OFF";
+ }
 }
+
 
 function showDebugLogs(){
 
@@ -873,9 +868,7 @@ function showDebugLogs(){
   <button id="emailLogsBtn" style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">
    Email Logs
   </button>
-  <button id="toggleCvDebugBtn"
-   style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">
-   Enable CV Overlay
+  <button id="toggleCvDebugBtn" class="round-btn" style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">CV Overlay: OFF
   </button>
  </div>
 
@@ -958,6 +951,8 @@ update();
 // Requires: @capacitor-community/camera-preview and opencv.js
 // -----------------------------
 let cvDebugEnabled=false;
+let cvMetrics={edges:0,quadScore:0,stable:0,fps:0};
+let lastFrameTime=performance.now();
 let scannerActive=false;
 let scannerStableFrames=0;
 let lastQuad=null;
@@ -1061,61 +1056,65 @@ async function startScanLoop(){
 
  async function scan(){
 
-     scanFrameCounter++;
+  if(!scannerActive) return;
 
-     if(!scannerActive) return;
+  scanFrameCounter++;
 
-     try{
+  try{
 
-         const frame=await CameraPreview.captureSample({quality:40});
+   const frame=await CameraPreview.captureSample({quality:40});
 
-         if(!frame?.value) return requestAnimationFrame(scan);
+   if(!frame || !frame.value){
+    scanLoopId=requestAnimationFrame(scan);
+    return;
+   }
 
-         const img=new Image();
-         img.src="data:image/jpeg;base64,"+frame.value;
+   const img=new Image();
+   img.src="data:image/jpeg;base64,"+frame.value;
 
-         img.onload=()=>{
+   img.onload=()=>{
 
-             ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-             logScan("frame_process","ok",{frame:scanFrameCounter});
-             const now=performance.now();
-             cvMetrics.fps=Math.round(1000/(now-lastFrameTime));
-             lastFrameTime=now;
+    logScan("frame_process","ok",{frame:scanFrameCounter});
 
-             const quad=detectReceiptQuad(canvas.width,canvas.height,img);
-             cvMetrics.stable=scannerStableFrames;
+    const now=performance.now();
+    cvMetrics.fps=Math.round(1000/(now-lastFrameTime));
+    lastFrameTime=now;
 
-             if(quad){
-                 logScan("quad_found","ok",{frame:scanFrameCounter});
-                 logScan("quad_detected","info",{area:Math.abs((quad[1].x-quad[0].x)*(quad[2].y-quad[1].y))});
-                 drawQuad(ctx,quad);
-                 drawDebugOverlay(ctx,quad);
+    const quad=detectReceiptQuad(canvas.width,canvas.height,img);
+    cvMetrics.stable=scannerStableFrames;
 
-                 if(lastQuad && quadSimilarity(quad,lastQuad)>0.92){
-                     scannerStableFrames++;
-                 }else{
-                     scannerStableFrames=0;
-                 }
+    if(quad){
 
-                 lastQuad=quad;
+     logScan("quad_detected","ok",{frame:scanFrameCounter});
 
-                 if(scannerStableFrames>=3){
-                     logScan("stability_confirmed","ok",{stableFrames:scannerStableFrames});
-                     logScan("auto_capture","info",{stable:scannerStableFrames});
-                     autoCapture(frame.value);
-                     return;
-                 }
+     drawQuad(ctx,quad);
 
-             }
-
-         };
-
-     }catch(e){
-         console.warn('scan frame error',e);
+     if(lastQuad && quadSimilarity(quad,lastQuad)>0.92){
+      scannerStableFrames++;
+     }else{
+      scannerStableFrames=0;
      }
 
-     scanLoopId=requestAnimationFrame(scan);
+     lastQuad=quad;
+
+     if(scannerStableFrames>=3){
+      logScan("auto_capture","ok",{stableFrames:scannerStableFrames});
+      autoCapture(frame.value);
+      return;
+     }
+    }
+
+    drawDebugOverlay(ctx,quad);
+
+   };
+
+  }catch(e){
+   console.warn('scan frame error',e);
+  }
+
+  scanLoopId=requestAnimationFrame(scan);
  }
 
  scan();
@@ -1209,31 +1208,32 @@ function detectReceiptQuad(w,h,img){
 // Debug overlay
 function drawDebugOverlay(ctx,quad){
 
-    if(!cvDebugEnabled) return;
+ if(!cvDebugEnabled) return;
 
-    if(quad){
-        ctx.fillStyle='rgba(0,255,0,0.15)';
-        ctx.beginPath();
-        ctx.moveTo(quad[0].x,quad[0].y);
-        ctx.lineTo(quad[1].x,quad[1].y);
-        ctx.lineTo(quad[2].x,quad[2].y);
-        ctx.lineTo(quad[3].x,quad[3].y);
-        ctx.closePath();
-        ctx.fill();
-    }
+ if(quad){
+  ctx.fillStyle='rgba(0,255,0,0.15)';
+  ctx.beginPath();
+  ctx.moveTo(quad[0].x,quad[0].y);
+  ctx.lineTo(quad[1].x,quad[1].y);
+  ctx.lineTo(quad[2].x,quad[2].y);
+  ctx.lineTo(quad[3].x,quad[3].y);
+  ctx.closePath();
+  ctx.fill();
+ }
 
-    // ---- metrics overlay ----
-    ctx.fillStyle='rgba(0,0,0,0.55)';
-    ctx.fillRect(12,12,160,90);
+ // ---- metrics overlay ----
+ ctx.fillStyle='rgba(0,0,0,0.55)';
+ ctx.fillRect(12,12,160,90);
 
-    ctx.fillStyle='#00ff9c';
-    ctx.font='12px monospace';
+ ctx.fillStyle='#00ff9c';
+ ctx.font='12px monospace';
 
-    ctx.fillText('CV METRICS',20,28);
-    ctx.fillText('FPS: '+(cvMetrics.fps||0),20,44);
-    ctx.fillText('Stable: '+(cvMetrics.stable||0),20,60);
-    ctx.fillText('Frame: '+scanFrameCounter,20,76);
+ ctx.fillText('CV METRICS',20,28);
+ ctx.fillText('FPS: '+(cvMetrics.fps||0),20,44);
+ ctx.fillText('Stable: '+(cvMetrics.stable||0),20,60);
+ ctx.fillText('Frame: '+scanFrameCounter,20,76);
 }
+
 
 function drawQuad(ctx,q){
 
@@ -1444,6 +1444,7 @@ async function stopScanner(){
 
 
     </script>
+
 <script type="module" src="/js/bundle.js"></script>
 </body>
 </html>
