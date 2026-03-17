@@ -768,6 +768,156 @@ app.addEventListener('touchend',e=>{
  startX=null;
 });
 
+// -----------------------------
+// Receipt Scanner Logging
+// -----------------------------
+
+const scannerLogs=[];
+
+// Numeric scanner telemetry logger
+let scanFrameCounter=0;
+
+function logScan(stepId,metrics={}){
+ const entry={
+  t:Date.now(),          // timestamp ms
+  step:stepId,           // numeric step id
+  frame:scanFrameCounter,// frame counter
+  ...metrics             // numeric metrics only
+ };
+ scannerLogs.push(entry);
+ console.log('[SCAN]',entry);
+}
+
+// -----------------------------
+// About / Debug Screen
+// -----------------------------
+
+const APP_VERSION="1.0.0";
+const APP_NAME="Tip Calculator";
+
+let aboutTapTimes=[];
+let debugMode=false;
+
+function openAbout(){
+ const modal=document.createElement('div');
+ modal.id='aboutModal';
+ modal.style.position='fixed';
+ modal.style.inset='0';
+ modal.style.zIndex='10000';
+ modal.style.background='rgba(0,0,0,.55)';
+ modal.style.display='flex';
+ modal.style.alignItems='center';
+ modal.style.justifyContent='center';
+
+ modal.innerHTML=`
+ <div id="aboutContent" style="background:var(--card);color:var(--text);padding:20px;border-radius:16px;width:90%;max-width:520px;max-height:80vh;overflow:auto;box-shadow:var(--shadow)">
+ <div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;margin-bottom:10px">
+ <img src="assets/icon/icon.png" style="width:28px;height:28px;border-radius:6px"> ${APP_NAME}
+ </div>
+ <div style="font-size:14px;margin-bottom:8px">Version ${APP_VERSION}</div>
+ <div style="font-size:12px;margin-bottom:14px">© ${new Date().getFullYear()} Tip Calculator</div>
+ <div id="tosBlock" style="font-size:13px;line-height:1.4;color:var(--muted)">
+ TIP CALCULATOR SOFTWARE LICENSE AGREEMENT
+
+Copyright (c) 2026 Tip Calculator Project. All rights reserved.
+
+Permission is granted to use this software for personal use. Redistribution, modification, or commercial resale of the software without written permission from the copyright holder is prohibited.
+
+This application is provided \"AS IS\" without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and noninfringement.
+
+In no event shall the authors or copyright holders be liable for any claim, damages, or other liability arising from the use of the software.
+
+The receipt scanning feature uses experimental computer vision algorithms executed locally on the device. Detection accuracy may vary depending on lighting conditions, receipt quality, and camera stability. Users should verify all calculated totals before relying on the results.
+ </div>
+ <div id="debugBlock" style="display:none;margin-top:10px"></div>
+ <div style="margin-top:16px;text-align:right">
+ <button onclick="closeAbout()" style="padding:.4rem .8rem;border:none;border-radius:8px;background:var(--button)">Close</button>
+ </div>
+ </div>`;
+
+ document.body.appendChild(modal);
+
+ const content=document.getElementById('aboutContent');
+ content.addEventListener('click',handleAboutTap);
+
+ if(debugMode) showDebugLogs();
+}
+
+function closeAbout(){
+ const m=document.getElementById('aboutModal');
+ if(m) m.remove();
+}
+
+function handleAboutTap(){
+ const now=Date.now();
+ aboutTapTimes.push(now);
+ aboutTapTimes=aboutTapTimes.filter(t=>now-t<5000);
+
+ if(aboutTapTimes.length>=5){
+  debugMode=true;
+  showDebugLogs();
+ }
+}
+
+function showDebugLogs(){
+ const tos=document.getElementById('tosBlock');
+ const dbg=document.getElementById('debugBlock');
+ if(!dbg||!tos) return;
+
+ tos.style.display='none';
+ dbg.style.display='block';
+
+ dbg.innerHTML=`
+ <table id="logTable" style="width:100%;font-size:12px;border-collapse:collapse">
+ <thead>
+ <tr>
+ <th data-col="time">Time</th>
+ <th data-col="step">Step</th>
+ <th data-col="status">Status</th>
+ <th data-col="detail">Detail</th>
+ </tr>
+ </thead>
+ <tbody></tbody>
+ </table>`;
+
+ renderLogTable();
+
+ document.querySelectorAll('#logTable th').forEach(th=>{
+  th.style.cursor='pointer';
+  th.onclick=()=>sortLogs(th.dataset.col);
+ });
+}
+
+function renderLogTable(){
+ const tbody=document.querySelector('#logTable tbody');
+ if(!tbody) return;
+
+ tbody.innerHTML="";
+
+ scannerLogs.forEach(l=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+  <td>${l.time}</td>
+  <td>${l.step}</td>
+  <td>${l.status}</td>
+  <td>${JSON.stringify(l)}</td>`;
+  tbody.appendChild(tr);
+ });
+}
+
+function sortLogs(col){
+ scannerLogs.sort((a,b)=>{
+  if(a[col]>b[col]) return 1;
+  if(a[col]<b[col]) return -1;
+  return 0;
+ });
+ renderLogTable();
+}
+
+// make header clickable
+const headerTitle=document.querySelector('.header span');
+if(headerTitle) headerTitle.addEventListener('click',openAbout);
+
 // initial render
 update();
 
@@ -783,6 +933,8 @@ let lastQuad=null;
 let scanLoopId=null;
 
 async function captureReceipt(){
+
+ logScan(1);
 
  if(!isNativeCapacitor){
   console.warn('Receipt scanning only available in native Capacitor builds');
@@ -800,10 +952,12 @@ async function captureReceipt(){
 
  scannerActive=true;
 
+ logScan("overlay_create");
  createScannerOverlay();
 
  try{
 
+  logScan("camera_preview_start");
   await CameraPreview.start({
    parent:'scannerPreview',
    className:'scanner-preview',
@@ -874,9 +1028,11 @@ async function startScanLoop(){
 
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
+    logScan("frame_process");
     const quad=detectReceiptQuad(canvas.width,canvas.height,img);
 
     if(quad){
+     logScan(3,{area:Math.abs((quad[1].x-quad[0].x)*(quad[2].y-quad[1].y))});
      drawQuad(ctx,quad);
 
      if(lastQuad && quadSimilarity(quad,lastQuad)>0.92){
@@ -888,6 +1044,7 @@ async function startScanLoop(){
      lastQuad=quad;
 
      if(scannerStableFrames>=3){
+      logScan(4,{stable:scannerStableFrames});
       autoCapture(frame.value);
       return;
      }
@@ -975,7 +1132,7 @@ function detectReceiptQuad(w,h,img){
   return bestQuad;
 
  }catch(e){
-  console.warn('opencv detect error',e);
+  logScan("opencv_error",{},"error"); console.warn('opencv detect error',e);
   return null;
  }
 
@@ -1085,17 +1242,22 @@ async function detectReceiptTotal(imageData){
 
 }
 
+// Compare two quads using average corner distance
 function quadSimilarity(a,b){
+ if(!a||!b) return 0;
 
- const dx=Math.abs(a.x-b.x);
- const dy=Math.abs(a.y-b.y);
- const dw=Math.abs(a.w-b.w);
- const dh=Math.abs(a.h-b.h);
+ let total=0;
+ for(let i=0;i<4;i++){
+  const dx=a[i].x-b[i].x;
+  const dy=a[i].y-b[i].y;
+  total+=Math.sqrt(dx*dx+dy*dy);
+ }
 
- const tolerance=(a.w+a.h)*0.025;
+ const avg=total/4;
+ const diag=Math.hypot(window.innerWidth,window.innerHeight);
+ const score=1-(avg/diag);
 
- return (dx+dy+dw+dh)<tolerance?1:0;
-
+ return score;
 }
 
 async function autoCapture(base64){
