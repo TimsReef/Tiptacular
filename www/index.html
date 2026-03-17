@@ -1042,7 +1042,7 @@ async function detectReceiptTotal(imageData){
 
   if(!result?.text) return null;
 
-  const matches=result.text.match(/\\d+\\.\\d{2}/g);
+  const matches=result.text.match(/\d+\.\d{2}/g);
 
   if(!matches) return null;
 
@@ -1106,37 +1106,13 @@ async function autoCapture(base64){
     inputRaw=String(total);
     update();
    }
-  }catch(e){console.warn('total detect fail',e)}
+  }catch(e){
+   console.warn('total detect fail',e);
+  }
 
  };
 
  stopScanner();
-
-}
-
- console.log('Receipt stabilized → capturing');
-
- const imgData="data:image/jpeg;base64,"+base64;
-
- let preview=document.getElementById('receiptPreview');
-
- if(!preview){
-  preview=document.createElement('img');
-  preview.id='receiptPreview';
-  preview.style.position='fixed';
-  preview.style.bottom='10px';
-  preview.style.right='10px';
-  preview.style.width='120px';
-  preview.style.borderRadius='8px';
-  preview.style.boxShadow='0 6px 16px rgba(0,0,0,.35)';
-  preview.style.zIndex='9999';
-  document.body.appendChild(preview);
- }
-
- preview.src=imgData;
-
- stopScanner();
-
 }
 
 async function stopScanner(){
