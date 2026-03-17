@@ -5,282 +5,335 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Tip Calculator</title>
     <style>
-        :root {
-            --accent:#2563eb;
-            --radius:18px;
-            --shadow:0 8px 20px rgba(0,0,0,.12);
-        }
+                :root {
+                    --accent:#2563eb;
+                    --radius:18px;
+                    --shadow:0 8px 20px rgba(0,0,0,.12);
+                }
 
-        body.transparent {
-            --text:#0f172a;
-            --muted:#475569;
-            --card:rgba(255,255,255,.28);
-            --key:rgba(255,255,255,.25);
-            --button:rgba(255,255,255,.22);
-            --border:rgba(255,255,255,.35);
-            --shadow:0 10px 30px rgba(0,0,0,.25);
-            background: transparent;
-        }
+                /* -----------------------------
+           THEMES
+        ------------------------------*/
 
-        body.light {
-            --text:#0f172a;
-            --muted:#64748b;
-            --card:#ffffff;
-            --key:#f1f5f9;
-            --button:#e2e8f0;
-            --border:#e2e8f0;
-            --shadow:0 8px 20px rgba(0,0,0,.10);
-            background: linear-gradient(180deg,#f6f8fb,#eef2f7);
-        }
+                body.transparent {
+                    --text:#0f172a;
+                    --muted:#475569;
+                    --card:rgba(255,255,255,.28);
+                    --key:rgba(255,255,255,.25);
+                    --button:rgba(255,255,255,.22);
+                    --border:rgba(255,255,255,.35);
+                    --shadow:0 10px 30px rgba(0,0,0,.25);
+                    background: transparent;
+                }
 
-        body.dark {
-            --text:#e5e7eb;
-            --muted:#9ca3af;
-            --card:#111827;
-            --key:#1f2937;
-            --button:#1f2937;
-            --border:#374151;
-            --shadow:0 10px 26px rgba(0,0,0,.45);
-            background: linear-gradient(180deg,#0f172a,#020617);
-        }
+                body.light {
+                    --text:#0f172a;
+                    --muted:#64748b;
+                    --card:#ffffff;
+                    --key:#f1f5f9;
+                    --button:#e2e8f0;
+                    --border:#e2e8f0;
+                    --shadow:0 8px 20px rgba(0,0,0,.10);
+                    background: linear-gradient(180deg,#f6f8fb,#eef2f7);
+                }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-            color: var(--text);
-            overflow: hidden;
-        }
+                body.dark {
+                    --text:#e5e7eb;
+                    --muted:#9ca3af;
+                    --card:#111827;
+                    --key:#1f2937;
+                    --button:#1f2937;
+                    --border:#374151;
+                    --shadow:0 10px 26px rgba(0,0,0,.45);
+                    background: linear-gradient(180deg,#0f172a,#020617);
+                }
 
-            body.transparent .card, body.transparent .key, body.transparent .icon-btn, body.transparent .control {
-                backdrop-filter: blur(22px) saturate(160%);
-                -webkit-backdrop-filter: blur(22px) saturate(160%);
-            }
+                html, body {
+                    height: 100%;
+                    margin: 0;
+                    font-family: -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+                    color: var(--text);
+                    overflow: hidden;
+                }
 
-        .app {
-            width: 100%;
-            height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            padding: max(env(safe-area-inset-top),8px) max(env(safe-area-inset-right),12px) max(env(safe-area-inset-bottom),10px) max(env(safe-area-inset-left),12px);
-            gap: clamp(10px,1.5vh,16px);
-            box-sizing: border-box;
-        }
+                    body.transparent .card,
+                    body.transparent .key,
+                    body.transparent .icon-btn,
+                    body.transparent .control {
+                        backdrop-filter: blur(22px) saturate(160%);
+                        -webkit-backdrop-filter: blur(22px) saturate(160%);
+                    }
 
-        .header {
-            font-size: 1.25rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 4px;
-        }
+                /* -----------------------------
+           APP FRAME
+        ------------------------------*/
 
-        .header-actions {
-            display: flex;
-            gap: 0.4rem;
-        }
+                .app {
+                    width: 100%;
+                    height: 100dvh;
+                    display: flex;
+                    flex-direction: column;
+                    padding: max(env(safe-area-inset-top),8px) max(env(safe-area-inset-right),12px) max(env(safe-area-inset-bottom),10px) max(env(safe-area-inset-left),12px);
+                    gap: clamp(10px,1.5vh,16px);
+                    box-sizing: border-box;
+  /* Standard property */
+  user-select: none;
+  /* Vendor prefixes for cross-browser compatibility */
+  -webkit-user-select: none; /* Safari, Chrome, iOS */
+  -moz-user-select: none;    /* Firefox */
+  -ms-user-select: none;     /* Internet Explorer/Edge */
+  
+  /* Change the cursor from text (I-beam) to default (arrow) */
+  cursor: default;
+                }
 
-        .icon-btn {
-            border: none;
-            background: var(--button);
-            color: var(--text);
-            border-radius: 10px;
-            width: 2.2rem;
-            height: 2.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-        }
+                .header {
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 4px;
+                }
 
-        .main {
-            flex: 1;
-            display: grid;
-            grid-template-rows: auto auto 1fr;
-            gap: clamp(10px,1.4vh,16px);
-            min-height: 0;
-        }
+                .header-actions {
+                    display: flex;
+                    gap: 0.4rem;
+                }
 
-        .left-panel {
-            display: flex;
-            flex-direction: column;
-            gap: clamp(10px,1.4vh,16px);
-            min-height: 0;
-        }
+                .icon-btn {
+                    border: none;
+                    background: var(--button);
+                    color: var(--text);
+                    border-radius: 10px;
+                    width: 2.2rem;
+                    height: 2.2rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1rem;
+                }
 
-        .right-panel {
-            display: flex;
-            flex-direction: column;
-            min-height: 0;
-            gap: clamp(8px,1.2vh,14px);
-        }
+                /* -----------------------------
+           LAYOUT
+        ------------------------------*/
 
-        .card {
-            background: var(--card);
-            border-radius: var(--radius);
-            padding: clamp(12px,1.8vh,18px);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-        }
+                .main {
+                    flex: 1;
+                    display: grid;
+                    grid-template-rows: auto auto 1fr;
+                    gap: clamp(10px,1.4vh,16px);
+                    min-height: 0;
+                }
 
-        .display {
-            font-size: clamp(26px,4.5vh,40px);
-            font-weight: 700;
-            margin-bottom: clamp(10px,1.4vh,14px);
-            text-align: right;
-            white-space: nowrap;
-            overflow: hidden;
-        }
+                .left-panel {
+                    display: flex;
+                    flex-direction: column;
+                    gap: clamp(10px,1.4vh,16px);
+                    min-height: 0;
+                }
 
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: clamp(10px,1.4vh,14px);
-        }
+                .right-panel {
+                    display: flex;
+                    flex-direction: column;
+                    min-height: 0;
+                    gap: clamp(8px,1.2vh,14px);
+                }
 
-        .control {
-            background: var(--button);
-            border-radius: 12px;
-            padding: 0.65rem;
-            text-align: center;
-        }
+                /* -----------------------------
+           CARDS
+        ------------------------------*/
 
-        .control-title {
-            font-size: 12px;
-            color: var(--muted);
-        }
+                .card {
+                    background: var(--card);
+                    border-radius: var(--radius);
+                    padding: clamp(12px,1.8vh,18px);
+                    box-shadow: var(--shadow);
+                    border: 1px solid var(--border);
+                }
 
-        .control-value {
-            font-size: 18px;
-            font-weight: 600;
-            margin: 4px 0;
-        }
+                .display {
+                    font-size: clamp(26px,4.5vh,40px);
+                    font-weight: 700;
+                    margin-bottom: clamp(10px,1.4vh,14px);
+                    text-align: right;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
 
-        .control-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 0.4rem;
-        }
+                .controls {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: clamp(10px,1.4vh,14px);
+                }
 
-            .control-buttons button {
-                border: none;
-                background: var(--card);
-                border-radius: 8px;
-                width: 28px;
-                height: 28px;
-            }
+                .control {
+                    background: var(--button);
+                    border-radius: 12px;
+                    padding: 0.65rem;
+                    text-align: center;
+                }
 
-        .tip-selector {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.65rem;
-        }
+                .control-title {
+                    font-size: 12px;
+                    color: var(--muted);
+                }
 
-        .tip-btn {
-            flex: 1;
-            border: none;
-            border-radius: 10px;
-            padding: 0.5rem 0;
-            background: var(--button);
-        }
+                .control-value {
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin: 4px 0;
+                }
 
-            .tip-btn.active {
-                background: var(--accent);
-                color: white;
-            }
+                .control-buttons {
+                    display: flex;
+                    justify-content: center;
+                    gap: 1.0rem;
+                }
 
-        .results {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            row-gap: 0.5rem;
-            column-gap: 0.5rem;
-            font-size: clamp(14px,2vh,17px);
-        }
+                    .control-buttons button {
+                        border: none;
+                        background: var(--card);
+                        border-radius: 8px;
+                        width: 28px;
+                        height: 28px;
+                    }
 
-        .label {
-            color: var(--muted);
-        }
+                .tip-selector {
+                    display: flex;
+                    gap: 0.5rem;
+                    margin-top: 0.65rem;
+                }
 
-        .value {
-            text-align: right;
-            font-weight: 600;
-        }
+                .tip-btn {
+                    flex: 1;
+                    border: none;
+                    border-radius: 10px;
+                    padding: 0.5rem 0;
+                    background: var(--button);
+                }
 
-        .total {
-            font-size: clamp(18px,2.6vh,22px);
-            font-weight: 700;
-        }
+                    .tip-btn.active {
+                        background: var(--accent);
+                        color: white;
+                    }
 
-        .round-row {
-            grid-column: 1/-1;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 8px;
-        }
+                /* -----------------------------
+           RESULTS
+        ------------------------------*/
 
-        .round-options {
-            display: flex;
-            gap: 0.4rem;
-        }
+                .results {
+                    display: grid;
+                    grid-template-columns: 1fr auto;
+                    row-gap: 0.5rem;
+                    column-gap: 0.5rem;
+                    font-size: clamp(14px,2vh,17px);
+                }
 
-        .round-btn {
-            border: none;
-            background: var(--button);
-            border-radius: 8px;
-            padding: 0.25rem 0.6rem;
-        }
+                .label {
+                    color: var(--muted);
+                }
 
-            .round-btn.active {
-                background: var(--accent);
-                color: white;
-            }
+                .value {
+                    text-align: right;
+                    font-weight: 600;
+                }
 
-        .keypad {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(3,1fr);
-            grid-template-rows: repeat(4,1fr);
-            gap: clamp(8px,1.2vh,14px);
-            min-height: 0;
-        }
+                .total {
+                    font-size: clamp(18px,2.6vh,22px);
+                    font-weight: 700;
+                }
 
-        .key {
-            border: none;
-            border-radius: clamp(12px,1.6vh,18px);
-            font-size: clamp(22px,5vh,32px);
-            background: var(--key);
-            color: var(--text);
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+                .round-row {
+                    grid-column: 1/-1;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 8px;
+                }
 
-        .swipe-hint {
-            text-align: center;
-            font-size: 11px;
-            color: var(--muted);
-        }
+                .round-options {
+                    display: flex;
+                    gap: 0.4rem;
+                }
 
-        @media (orientation: landscape) {
-            .main {
-                grid-template-columns: 1.1fr .9fr;
-                grid-template-rows: 1fr;
-            }
+                .round-btn {
+                    border: none;
+                    background: var(--button);
+                    border-radius: 8px;
+                    padding: 0.25rem 0.6rem;
+                }
 
-            .tip-selector {
-                display: none;
-            }
-        }
+                    .round-btn.active {
+                        background: var(--accent);
+                        color: white;
+                    }
+
+                /* -----------------------------
+           KEYPAD
+        ------------------------------*/
+
+                .keypad {
+                    flex: 1;
+                    display: grid;
+                    grid-template-columns: repeat(3,1fr);
+                    grid-template-rows: repeat(4,1fr);
+                    gap: clamp(8px,1.2vh,14px);
+                    min-height: 0;
+                }
+
+                .key {
+                    border: none;
+                    border-radius: clamp(12px,1.6vh,18px);
+                    font-size: clamp(22px,5vh,32px);
+                    background: var(--key);
+                    color: var(--text);
+                    box-shadow: var(--shadow);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: transform .08s ease,box-shadow .08s ease,filter .08s ease;
+                }
+
+                    .key:active {
+                        transform: translateY(2px) scale(.96);
+                        box-shadow: 0 2px 6px rgba(0,0,0,.25) inset,0 3px 8px rgba(0,0,0,.18);
+                        filter: brightness(.96);
+                    }
+
+                .swipe-hint {
+                    text-align: center;
+                    font-size: 11px;
+                    color: var(--muted);
+                }
+
+                /* -----------------------------
+           LANDSCAPE
+        ------------------------------*/
+
+                @media (orientation: landscape) {
+
+                    .main {
+                        grid-template-columns: 1.1fr .9fr;
+                        grid-template-rows: 1fr;
+                    }
+
+                    .left-panel {
+                        height: 100%;
+                    }
+
+                    .tip-selector {
+                        display: none;
+                    }
+                }
     </style>
 </head>
 <body>
     <div class="app" id="app">
         <div class="header">
             <span style="display:flex;align-items:center;gap:0.5rem;">
-                <img src="assets/icon/icon.png" alt="app icon" style="width:22px;height:22px;border-radius:5px;">Tip Calculator
+                <img src="assets/icon/icon.png" alt="app icon" style="width:22px;height:22px;border-radius:5px;">
+                Tip Calculator
             </span>
             <div class="header-actions">
                 <button class="icon-btn" id="cameraBtn" onclick="captureReceipt()">📷</button>
@@ -355,130 +408,1042 @@
     </div>
     <script>
 
-        let inputRaw="";
-        let people=1;
-        let tipPercent=18;
-        let roundMode='none';
-        let soundEnabled=true;
-        let themeMode='transparent';
-        const MAX_INPUT_LENGTH=14;
+// -----------------------------
+// App State
+// -----------------------------
+let inputRaw="";
+let people=1;
+let tipPercent=18;
+let roundMode='none';
+let soundEnabled=true;
+let themeMode='transparent';
 
-        const app=document.getElementById('app');
-        const subtotalDisplay=document.getElementById('subtotalDisplay');
-        const resultsCard=document.getElementById('resultsCard');
-        const tipAmount=document.getElementById('tipAmount');
-        const totalAmount=document.getElementById('totalAmount');
-        const splitAmount=document.getElementById('splitAmount');
-        const peopleDisplay=document.getElementById('people');
-        const tipPercentDisplay=document.getElementById('tipPercent');
-        const cameraBtn=document.getElementById('cameraBtn');
+const MAX_INPUT_LENGTH=14;
 
-        const isNativeCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
-        if(!isNativeCapacitor && cameraBtn){cameraBtn.style.display='none';}
+// -----------------------------
+// DOM
+// -----------------------------
 
-        function update(){
-            const subtotal=parseFloat(inputRaw||0);
-            let tip=subtotal*(tipPercent/100);
-            let total=subtotal+tip;
-            if(roundMode==='total'){total=Math.ceil(total);tip=total-subtotal;}
-            if(roundMode==='tip'){tip=Math.ceil(tip);total=subtotal+tip;}
-            const split=total/people;
-            subtotalDisplay.innerText=formatInput(inputRaw);
-            format(tip,tipAmount);format(total,totalAmount);format(split,splitAmount);
-        }
+const app=document.getElementById('app');
+const subtotalDisplay=document.getElementById('subtotalDisplay');
+const resultsCard=document.getElementById('resultsCard');
 
-        function format(v,el){el.innerText=v.toLocaleString(undefined,{style:'currency',currency:'USD'});}
-        function formatInput(v){if(!v)return '$0.00';return '$'+Number(v).toLocaleString();}
+const tipAmount=document.getElementById('tipAmount');
+const totalAmount=document.getElementById('totalAmount');
+const splitAmount=document.getElementById('splitAmount');
+const peopleDisplay=document.getElementById('people');
+const tipPercentDisplay=document.getElementById('tipPercent');
+const cameraBtn=document.getElementById('cameraBtn');
 
-        function press(v){if(inputRaw.length>=MAX_INPUT_LENGTH)return;if(v==='.'&&inputRaw.includes('.'))return;inputRaw+=v;update();}
-        function backspace(){inputRaw=inputRaw.slice(0,-1);update();}
-        function changePeople(v){people=Math.max(1,people+v);peopleDisplay.innerText=people;update();}
-        function changeTip(v){tipPercent=Math.max(0,tipPercent+v);tipPercentDisplay.innerText=tipPercent+"%";update();}
-        function setTip(v){tipPercent=v;tipPercentDisplay.innerText=v+"%";update();}
-        function setRounding(m){roundMode=m;update();}
+// Detect if running inside Capacitor (native mobile build)
+const isNativeCapacitor = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
-        function toggleTheme(){themeMode=themeMode==='transparent'?'light':themeMode==='light'?'dark':'transparent';applyTheme();}
-        function applyTheme(){document.body.classList.remove('transparent','light','dark');document.body.classList.add(themeMode);}applyTheme();
+// Hide camera button on web preview
+if(!isNativeCapacitor && cameraBtn){
+ cameraBtn.style.display='none';
+}
 
-        let audioCtx=null;let clickBuffer=null;
-        function initAudio(){if(audioCtx)return;audioCtx=new(window.AudioContext||window.webkitAudioContext)();const l=audioCtx.sampleRate*.02;clickBuffer=audioCtx.createBuffer(1,l,audioCtx.sampleRate);const d=clickBuffer.getChannelData(0);for(let i=0;i<l;i++){d[i]=(Math.random()*2-1)*(1-i/l);} }
-        function playClick(){if(!audioCtx||!clickBuffer)return;const s=audioCtx.createBufferSource();const g=audioCtx.createGain();s.buffer=clickBuffer;g.gain.value=.12;s.connect(g);g.connect(audioCtx.destination);s.start();}
-        function toggleSound(){soundEnabled=!soundEnabled;document.getElementById('soundBtn').innerText=soundEnabled?'🔊':'🔇';}
+// -----------------------------
+// Resize-safe autoscale engine
+// -----------------------------
 
-        app.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(!b||!soundEnabled)return;if(!audioCtx)initAudio();playClick();});
+let scaleScheduled=false;
 
-        let startX=null;
-        app.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;});
-        app.addEventListener('touchend',e=>{if(startX===null)return;const endX=e.changedTouches[0].clientX;if(startX-endX>120){inputRaw="";update();}startX=null;});
+function scheduleAutoScale(){
+ if(scaleScheduled) return;
+ scaleScheduled=true;
+ requestAnimationFrame(()=>{
+  scaleScheduled=false;
+  autoScaleNumbers();
+ });
+}
 
-        const scannerLogs=[];let scanFrameCounter=0;
-        function logScan(step,status="info",metrics={}){scannerLogs.push({t:Date.now(),step:String(step),status:String(status),frame:scanFrameCounter,...metrics});}
+function autoScaleNumbers(){
 
-            const APP_VERSION="1.0.0";const APP_NAME="Tip Calculator";
-            let aboutTapTimes=[];let debugMode=false;let cvDebugEnabled=false;
+ if(!subtotalDisplay || !resultsCard) return;
 
-            function openAbout(){const modal=document.createElement('div');modal.id='aboutModal';modal.style.position='fixed';modal.style.inset='0';modal.style.zIndex='10000';modal.style.background='rgba(0,0,0,.55)';modal.style.display='flex';modal.style.alignItems='center';modal.style.justifyContent='center';debugMode=false;aboutTapTimes=[];
-                modal.innerHTML=`<div id="aboutContent" style="background:var(--card);color:var(--text);padding:20px;border-radius:16px;width:90%;max-width:520px;max-height:80vh;box-shadow:var(--shadow);display:flex;flex-direction:column"><div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;margin-bottom:10px"><img src="assets/icon/icon.png" style="width:28px;height:28px;border-radius:6px"> ${APP_NAME}</div><div style="font-size:14px;margin-bottom:8px">Version ${APP_VERSION}</div><div id="tosBlock" style="font-size:13px;overflow:auto;max-height:40vh">Tip Calculator License Agreement...</div><div id="debugBlock" style="display:none;margin-top:10px;flex:1;min-height:0"></div><div style="margin-top:16px;text-align:right"><button onclick="closeAbout()" style="padding:.4rem .8rem;border:none;border-radius:8px;background:var(--button)">Close</button></div></div>`;
-                document.body.appendChild(modal);
-                const content=document.getElementById('aboutContent');if(content)content.addEventListener('click',handleAboutTap);
-            }
+ let displaySize=40;
+ let resultsSize=17;
 
-            function closeAbout(){const m=document.getElementById('aboutModal');if(m)m.remove();}
-            function handleAboutTap(){const now=Date.now();aboutTapTimes.push(now);aboutTapTimes=aboutTapTimes.filter(t=>now-t<5000);if(aboutTapTimes.length>=5){debugMode=true;showDebugLogs();}}
+ const minDisplay=18;
+ const minResults=13;
 
-            function toggleCvDebug(){cvDebugEnabled=!cvDebugEnabled;const btn=document.getElementById("toggleCvDebugBtn");if(btn){btn.innerText=cvDebugEnabled?"Disable CV Overlay":"Enable CV Overlay";}}
+ subtotalDisplay.style.fontSize=displaySize+'px';
+ resultsCard.style.fontSize=resultsSize+'px';
 
-            function showDebugLogs(){const tos=document.getElementById('tosBlock');const dbg=document.getElementById('debugBlock');if(!dbg||!tos)return;tos.style.display='none';dbg.style.display='block';dbg.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:8px"><button id="emailLogsBtn" style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">Email Logs</button><button id="toggleCvDebugBtn" style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">Enable CV Overlay</button></div><div style="max-height:45vh;overflow:auto;border:1px solid var(--border);border-radius:8px"><table id="logTable" style="width:100%;font-size:12px;border-collapse:collapse"><thead><tr><th data-col="t">Time</th><th data-col="step">Step</th><th data-col="status">Status</th><th data-col="frame">Frame</th></tr></thead><tbody></tbody></table></div>`;
-                renderLogTable();
-                const btn=document.getElementById("toggleCvDebugBtn");if(btn)btn.onclick=toggleCvDebug;
-                const emailBtn=document.getElementById('emailLogsBtn');if(emailBtn)emailBtn.onclick=emailLogs;
-                document.querySelectorAll('#logTable th').forEach(th=>{th.onclick=()=>sortLogs(th.dataset.col);});
-            }
+ while(subtotalDisplay.scrollWidth>subtotalDisplay.clientWidth && displaySize>minDisplay){
+  displaySize--;
+  subtotalDisplay.style.fontSize=displaySize+'px';
+ }
 
-            function renderLogTable(){const tbody=document.querySelector('#logTable tbody');if(!tbody)return;tbody.innerHTML="";scannerLogs.forEach(l=>{const tr=document.createElement('tr');const time=new Date(l.t).toLocaleTimeString();tr.innerHTML=`<td>${time}</td><td>${l.step||''}</td><td>${l.status||''}</td><td>${l.frame??''}</td>`;tbody.appendChild(tr);});}
+ while(resultsCard.scrollHeight>resultsCard.clientHeight && resultsSize>minResults){
+  resultsSize--;
+  resultsCard.style.fontSize=resultsSize+'px';
+ }
 
-            function emailLogs(){try{const body=encodeURIComponent(JSON.stringify(scannerLogs,null,2));window.location.href=`mailto:?subject=Tip%20Calculator%20Scanner%20Logs&body=${body}`;}catch(e){}}
+ const totalRow=resultsCard.querySelector('.total');
+ if(totalRow){
+  totalRow.style.fontSize=(resultsSize*1.35)+'px';
+ }
+}
 
-            function sortLogs(col){scannerLogs.sort((a,b)=>a[col]>b[col]?1:-1);renderLogTable();}
+window.addEventListener('resize',scheduleAutoScale);
+window.addEventListener('orientationchange',scheduleAutoScale);
 
-            const headerTitle=document.querySelector('.header span');if(headerTitle)headerTitle.addEventListener('click',openAbout);
+// -----------------------------
+// Theme
+// -----------------------------
 
-            update();
+const savedTheme=localStorage.getItem('tipcalc-theme');
+if(savedTheme) themeMode=savedTheme;
 
-            // ---------------- Scanner -----------------
-            let scannerActive=false;let scannerStableFrames=0;let lastQuad=null;let scanLoopId=null;
+function applyTheme(){
+ document.body.classList.remove('transparent','light','dark');
+ document.body.classList.add(themeMode);
 
-            async function captureReceipt(){logScan("capture_start");if(!isNativeCapacitor){console.warn('native only');return;}if(scannerActive)return;const CameraPreview=window.Capacitor?.Plugins?.CameraPreview;if(!CameraPreview){alert('Install camera-preview');return;}scannerActive=true;createScannerOverlay();
-                try{await CameraPreview.start({parent:'scannerPreview',position:'rear',width:window.innerWidth,height:window.innerHeight,toBack:false});startScanLoop();}catch(err){console.error(err);stopScanner();}}
+ const btn=document.getElementById('themeBtn');
+ if(themeMode==='transparent') btn.innerText='🫧';
+ if(themeMode==='light') btn.innerText='☀️';
+ if(themeMode==='dark') btn.innerText='🌙';
 
-            function createScannerOverlay(){let overlay=document.getElementById('scannerOverlay');if(overlay)return;overlay=document.createElement('div');overlay.id='scannerOverlay';overlay.style.position='fixed';overlay.style.inset='0';overlay.style.zIndex='9999';overlay.style.background='black';overlay.innerHTML=`<div id="scannerPreview" style="position:absolute;inset:0"></div><canvas id="scannerCanvas" style="position:absolute;inset:0"></canvas><button id="closeScanner" style="position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:18px;border:none">✕</button><button id="cancelScanner" style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);padding:.7rem 1.2rem;border:none;border-radius:10px">Cancel</button>`;document.body.appendChild(overlay);
+ localStorage.setItem('tipcalc-theme',themeMode);
+}
 
-                // attach handlers AFTER element exists
-                const closeBtn=document.getElementById('closeScanner');
-                const cancelBtn=document.getElementById('cancelScanner');
-                if(closeBtn)closeBtn.onclick=stopScanner;
-                if(cancelBtn)cancelBtn.onclick=stopScanner;
-            }
+function toggleTheme(){
+ if(themeMode==='transparent') themeMode='light';
+ else if(themeMode==='light') themeMode='dark';
+ else themeMode='transparent';
 
-            async function startScanLoop(){const CameraPreview=window.Capacitor.Plugins.CameraPreview;const canvas=document.getElementById('scannerCanvas');if(!canvas)return;const ctx=canvas.getContext('2d');canvas.width=window.innerWidth;canvas.height=window.innerHeight;
-                async function scan(){scanFrameCounter++;if(!scannerActive)return;try{const frame=await CameraPreview.captureSample({quality:40});if(!frame?.value){scanLoopId=requestAnimationFrame(scan);return;}const img=new Image();img.src="data:image/jpeg;base64,"+frame.value;img.onload=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);const quad=detectReceiptQuad(canvas.width,canvas.height,img);if(quad){drawQuad(ctx,quad);drawDebugOverlay(ctx,quad);if(lastQuad&&quadSimilarity(quad,lastQuad)>0.92){scannerStableFrames++;}else{scannerStableFrames=0;}lastQuad=quad;if(scannerStableFrames>=3){autoCapture(frame.value);return;}}};}catch(e){}
-                scanLoopId=requestAnimationFrame(scan);}scan();}
+ applyTheme();
+}
 
-        function detectReceiptQuad(w,h,img){if(!window.cv||!img)return null;try{const src=cv.imread(img);const gray=new cv.Mat();const blur=new cv.Mat();const edges=new cv.Mat();cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);cv.Canny(blur,edges,75,200);const contours=new cv.MatVector();const hierarchy=new cv.Mat();cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);let bestQuad=null;let bestScore=0;for(let i=0;i<contours.size();i++){const cnt=contours.get(i);const peri=cv.arcLength(cnt,true);const approx=new cv.Mat();cv.approxPolyDP(cnt,approx,0.02*peri,true);if(approx.rows===4){const pts=[];for(let j=0;j<4;j++){const p=approx.intPtr(j,0);pts.push({x:p[0],y:p[1]});}bestQuad=pts;bestScore=1;}approx.delete();cnt.delete();}src.delete();gray.delete();blur.delete();edges.delete();contours.delete();hierarchy.delete();return bestScore?bestQuad:null;}catch(e){return null;}}
+applyTheme();
 
-        function drawDebugOverlay(ctx,quad){if(!cvDebugEnabled||!quad)return;ctx.fillStyle='rgba(0,255,0,.15)';ctx.beginPath();ctx.moveTo(quad[0].x,quad[0].y);ctx.lineTo(quad[1].x,quad[1].y);ctx.lineTo(quad[2].x,quad[2].y);ctx.lineTo(quad[3].x,quad[3].y);ctx.closePath();ctx.fill();}
+// -----------------------------
+// Sound
+// -----------------------------
 
-        function drawQuad(ctx,q){if(!q||q.length!==4)return;ctx.lineWidth=4;ctx.strokeStyle='rgba(0,180,255,0.95)';ctx.beginPath();ctx.moveTo(q[0].x,q[0].y);ctx.lineTo(q[1].x,q[1].y);ctx.lineTo(q[2].x,q[2].y);ctx.lineTo(q[3].x,q[3].y);ctx.closePath();ctx.stroke();}
+let audioCtx=null;
+let clickBuffer=null;
 
-        function quadSimilarity(a,b){if(!a||!b)return 0;let total=0;for(let i=0;i<4;i++){const dx=a[i].x-b[i].x;const dy=a[i].y-b[i].y;total+=Math.sqrt(dx*dx+dy*dy);}const avg=total/4;const diag=Math.hypot(window.innerWidth,window.innerHeight);return 1-(avg/diag);}
+function initAudio(){
+ if(audioCtx) return;
 
-        async function autoCapture(base64){const imgData="data:image/jpeg;base64,"+base64;const img=new Image();img.src=imgData;img.onload=async()=>{let preview=document.getElementById('receiptPreviewContainer');if(!preview){preview=document.createElement('div');preview.id='receiptPreviewContainer';preview.style.position='fixed';preview.style.bottom='10px';preview.style.right='10px';preview.style.zIndex='9999';const im=document.createElement('img');im.id='receiptPreview';im.style.width='140px';const close=document.createElement('button');close.innerText='✕';close.onclick=()=>preview.remove();preview.appendChild(im);preview.appendChild(close);document.body.appendChild(preview);}document.getElementById('receiptPreview').src=imgData;};stopScanner();}
+ try{
+  audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 
-        async function stopScanner(){scannerActive=false;scannerStableFrames=0;lastQuad=null;if(scanLoopId)cancelAnimationFrame(scanLoopId);try{const CameraPreview=window.Capacitor?.Plugins?.CameraPreview;if(CameraPreview)await CameraPreview.stop();}catch(e){}const overlay=document.getElementById('scannerOverlay');if(overlay)overlay.remove();}
+  const length=audioCtx.sampleRate*0.02;
+  clickBuffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+
+  const data=clickBuffer.getChannelData(0);
+  for(let i=0;i<length;i++){
+   data[i]=(Math.random()*2-1)*(1-i/length);
+  }
+
+ }catch(e){audioCtx=null}
+}
+
+function playClick(){
+ if(!audioCtx||!clickBuffer) return;
+
+ const source=audioCtx.createBufferSource();
+ const gain=audioCtx.createGain();
+
+ source.buffer=clickBuffer;
+ gain.gain.value=0.12+Math.random()*0.05;
+ source.playbackRate.value=0.95+Math.random()*0.1;
+
+ source.connect(gain);
+ gain.connect(audioCtx.destination);
+
+ source.start();
+}
+
+function toggleSound(){
+ soundEnabled=!soundEnabled;
+ document.getElementById('soundBtn').innerText=soundEnabled?'🔊':'🔇';
+}
+
+// -----------------------------
+// Keypad
+// -----------------------------
+
+function press(v){
+
+ if(inputRaw.length>=MAX_INPUT_LENGTH) return;
+
+ if(v==='.' && inputRaw.includes('.')) return;
+
+ inputRaw+=v;
+ update();
+}
+
+function backspace(){
+ if(!inputRaw) return;
+ inputRaw=inputRaw.slice(0,-1);
+ update();
+}
+
+function clearInput(){
+ inputRaw="";
+ update();
+}
+
+// -----------------------------
+// Settings
+// -----------------------------
+
+function changePeople(v){
+ people=Math.max(1,people+v);
+ peopleDisplay.innerText=people;
+ update();
+}
+
+function changeTip(v){
+ tipPercent=Math.max(0,tipPercent+v);
+ tipPercentDisplay.innerText=tipPercent+"%";
+ highlightTip();
+ update();
+}
+
+function setTip(v){
+ tipPercent=v;
+ tipPercentDisplay.innerText=v+"%";
+ highlightTip();
+ update();
+}
+
+function setRounding(mode){
+ roundMode=mode;
+ document.querySelectorAll('.round-btn').forEach(btn=>{
+  btn.classList.toggle('active',btn.innerText.toLowerCase()===mode);
+ });
+ update();
+}
+
+function highlightTip(){
+ document.querySelectorAll('.tip-btn').forEach(btn=>{
+  btn.classList.toggle('active',btn.innerText===tipPercent+'%');
+ });
+}
+
+// -----------------------------
+// Calculations
+// -----------------------------
+
+function update(){
+
+ const subtotal=parseFloat(inputRaw||0);
+ let tip=subtotal*(tipPercent/100);
+ let total=subtotal+tip;
+
+ if(roundMode==='total'){
+  total=Math.ceil(total);
+  tip=total-subtotal;
+ }
+
+ if(roundMode==='tip'){
+  tip=Math.ceil(tip);
+  total=subtotal+tip;
+ }
+
+ const split=total/people;
+
+ subtotalDisplay.innerText=formatInput(inputRaw);
+
+ format(tip,tipAmount);
+ format(total,totalAmount);
+ format(split,splitAmount);
+
+ scheduleAutoScale();
+}
+
+function format(v,el){
+ el.innerText=v.toLocaleString(undefined,{style:'currency',currency:'USD'});
+}
+
+function formatInput(value){
+
+ if(!value) return '$0.00';
+
+ const parts=value.split('.');
+ const whole=parts[0]||'0';
+ const decimal=parts[1]??null;
+
+ const formattedWhole=parseInt(whole,10).toLocaleString();
+
+ if(decimal!==null){
+  return '$'+formattedWhole+'.'+decimal;
+ }
+
+ return '$'+formattedWhole;
+}
+
+// -----------------------------
+// Long Press Delete
+// -----------------------------
+
+let deleteInterval=null;
+const deleteKey=document.querySelector('.keypad button:last-child');
+
+if(deleteKey){
+ deleteKey.addEventListener('pointerdown',()=>{
+  if(deleteInterval) return;
+
+  deleteInterval=setInterval(()=>{
+
+   if(!inputRaw){
+    clearInterval(deleteInterval);
+    deleteInterval=null;
+    return;
+   }
+
+   inputRaw=inputRaw.slice(0,-1);
+   update();
+
+  },120);
+ });
+
+ deleteKey.addEventListener('pointerup',()=>{
+  clearInterval(deleteInterval);
+  deleteInterval=null;
+ });
+
+ deleteKey.addEventListener('pointerleave',()=>{
+  clearInterval(deleteInterval);
+  deleteInterval=null;
+ });
+}
+
+// -----------------------------
+// Pointerdown sound trigger
+// -----------------------------
+
+app.addEventListener('pointerdown',e=>{
+
+ const btn=e.target.closest('button');
+ if(!btn) return;
+
+ if(!soundEnabled) return;
+
+ if(!audioCtx) initAudio();
+
+ try{playClick()}catch(err){}
+
+});
+
+// -----------------------------
+// Swipe Clear
+// -----------------------------
+
+let startX=null;
+
+app.addEventListener('touchstart',e=>{
+ startX=e.touches[0].clientX;
+});
+
+app.addEventListener('touchend',e=>{
+ if(startX===null) return;
+ const endX=e.changedTouches[0].clientX;
+ if(startX-endX>120) clearInput();
+ startX=null;
+});
+
+// -----------------------------
+// Receipt Scanner Logging
+// -----------------------------
+
+const scannerLogs=[];
+
+// Structured scanner telemetry logger
+let scanFrameCounter=0;
+
+function logScan(step,status="info",metrics={}){
+ const entry={
+  t:Date.now(),
+  step:String(step),
+  status:String(status),
+  frame:scanFrameCounter,
+  ...metrics
+ };
+ scannerLogs.push(entry);
+ console.log('[SCAN]',entry);
+}
+
+// -----------------------------
+// About / Debug Screen
+// -----------------------------
+
+const APP_VERSION="1.0.0";
+const APP_NAME="Tip Calculator";
+
+let aboutTapTimes=[];
+let debugMode=false;
+
+function openAbout(){
+ const modal=document.createElement('div');
+ modal.id='aboutModal';
+ modal.style.position='fixed';
+ modal.style.inset='0';
+ modal.style.zIndex='10000';
+ modal.style.background='rgba(0,0,0,.55)';
+ modal.style.display='flex';
+ modal.style.alignItems='center';
+ modal.style.justifyContent='center';
+
+ debugMode=false;
+ aboutTapTimes=[];
+
+ modal.innerHTML=`
+ <div id="aboutContent" style="background:var(--card);color:var(--text);padding:20px;border-radius:16px;width:90%;max-width:520px;max-height:80vh;box-shadow:var(--shadow);display:flex;flex-direction:column">
+ <div style="display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;margin-bottom:10px">
+ <img src="assets/icon/icon.png" style="width:28px;height:28px;border-radius:6px"> ${APP_NAME}
+ </div>
+ <div style="font-size:14px;margin-bottom:8px">Version ${APP_VERSION}</div>
+ <div style="font-size:12px;margin-bottom:14px">© ${new Date().getFullYear()} GizSoft</div>
+ <div id="tosBlock" style="font-size:13px;line-height:1.4;color:var(--muted);overflow:auto;max-height:40vh">
+ TIP CALCULATOR SOFTWARE LICENSE AGREEMENT
+
+Copyright (c) 2026 GizSoft. All rights reserved.
+
+Permission is granted to use this software for personal use. Redistribution, modification, or commercial resale of the software without written permission from the copyright holder is prohibited.
+
+This application is provided \"AS IS\" without warranty of any kind, express or implied.
+
+In no event shall the authors or copyright holders be liable for any claim or damages arising from use of this software.
+
+The receipt scanning feature uses experimental computer vision algorithms executed locally on the device. Accuracy may vary depending on lighting conditions and camera stability.
+ </div>
+ <div id="debugBlock" style="display:none;margin-top:10px;flex:1;min-height:0"></div>
+ <div style="margin-top:16px;text-align:right">
+ <button onclick="closeAbout()" style="padding:.4rem .8rem;border:none;border-radius:8px;background:var(--button)">Close</button>
+ </div>
+ </div>`;
+
+ document.body.appendChild(modal);
+
+ const content=document.getElementById('aboutContent');
+ content.addEventListener('click',handleAboutTap);
+}
+
+
+
+function closeAbout(){
+ const m=document.getElementById('aboutModal');
+ if(m) m.remove();
+}
+
+function handleAboutTap(){
+ const now=Date.now();
+ aboutTapTimes.push(now);
+ aboutTapTimes=aboutTapTimes.filter(t=>now-t<5000);
+
+ if(aboutTapTimes.length>=5){
+  debugMode=true;
+  showDebugLogs();
+ }
+}
+
+function toggleCvDebug(){
+
+    cvDebugEnabled=!cvDebugEnabled;
+
+    const btn=document.getElementById("toggleCvDebugBtn");
+
+    if(btn){
+        btn.classList.toggle('active',cvDebugEnabled);
+        btn.innerText=cvDebugEnabled
+         ? "Disable CV Overlay"
+         : "Enable CV Overlay";
+    }
+
+}
+
+function showDebugLogs(){
+
+ const tos=document.getElementById('tosBlock');
+ const dbg=document.getElementById('debugBlock');
+ if(!dbg||!tos) return;
+
+ tos.style.display='none';
+ dbg.style.display='block';
+
+ dbg.innerHTML=`
+ <div style="display:flex;gap:8px;margin-bottom:8px">
+  <button id="emailLogsBtn" style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">
+   Email Logs
+  </button>
+  <button id="toggleCvDebugBtn"
+   style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">
+   Enable CV Overlay
+  </button>
+ </div>
+
+ <div style="max-height:45vh;overflow:auto;border:1px solid var(--border);border-radius:8px">
+  <table id="logTable" style="width:100%;font-size:12px;border-collapse:collapse">
+   <thead>
+    <tr>
+     <th data-col="t">Time</th>
+     <th data-col="step">Step</th>
+     <th data-col="status">Status</th>
+     <th data-col="frame">Frame</th>
+    </tr>
+   </thead>
+   <tbody></tbody>
+  </table>
+ </div>
+ `;
+
+ renderLogTable();
+
+ const btn=document.getElementById("toggleCvDebugBtn");
+ if(btn)btn.onclick=toggleCvDebug;
+
+ const emailBtn=document.getElementById('emailLogsBtn');
+ if(emailBtn) emailBtn.onclick=emailLogs;
+
+ document.querySelectorAll('#logTable th').forEach(th=>{
+  th.style.cursor='pointer';
+  th.onclick=()=>sortLogs(th.dataset.col);
+ });
+}
+
+function renderLogTable(){
+ const tbody=document.querySelector('#logTable tbody');
+ if(!tbody) return;
+
+ tbody.innerHTML="";
+
+ scannerLogs.forEach(l=>{
+  const tr=document.createElement('tr');
+  const time=new Date(l.t).toLocaleTimeString();
+
+  tr.innerHTML=`
+   <td>${time}</td>
+   <td>${l.step||''}</td>
+   <td>${l.status||''}</td>
+   <td>${l.frame ?? ''}</td>`;
+
+  tbody.appendChild(tr);
+ });
+}
+
+function emailLogs(){
+ try{
+  const body=encodeURIComponent(JSON.stringify(scannerLogs,null,2));
+  const subject=encodeURIComponent('Tip Calculator Scanner Logs');
+  window.location.href=`mailto:?subject=${subject}&body=${body}`;
+ }catch(e){console.warn('email logs failed',e)}
+}
+
+function sortLogs(col){
+ scannerLogs.sort((a,b)=>{
+  if(a[col]>b[col]) return 1;
+  if(a[col]<b[col]) return -1;
+  return 0;
+ });
+ renderLogTable();
+}
+
+// make header clickable
+const headerTitle=document.querySelector('.header span');
+if(headerTitle) headerTitle.addEventListener('click',openAbout);
+
+// initial render
+update();
+
+// -----------------------------
+// Live Receipt Scanner (Production Architecture)
+// Camera Preview → Edge Detection → Quad Detection → Stability → Auto Capture
+// Requires: @capacitor-community/camera-preview and opencv.js
+// -----------------------------
+let cvDebugEnabled=false;
+let scannerActive=false;
+let scannerStableFrames=0;
+let lastQuad=null;
+let scanLoopId=null;
+
+async function captureReceipt(){
+
+ logScan("capture_start");
+
+ if(!isNativeCapacitor){
+  console.warn('Receipt scanning only available in native Capacitor builds');
+  return;
+ }
+
+ if(scannerActive) return;
+
+ const CameraPreview = window.Capacitor?.Plugins?.CameraPreview;
+
+ if(!CameraPreview){
+  alert('Install @capacitor-community/camera-preview for live scanning');
+  return;
+ }
+
+ scannerActive=true;
+
+ logScan("overlay_create");
+ createScannerOverlay();
+
+ try{
+
+  logScan("camera_preview_start");
+  await CameraPreview.start({
+   parent:'scannerPreview',
+   className:'scanner-preview',
+   position:'rear',
+   width:window.innerWidth,
+   height:window.innerHeight,
+   toBack:false
+  });
+
+  startScanLoop();
+
+ }catch(err){
+  console.error('Camera preview failed',err);
+  stopScanner();
+ }
+
+}
+
+
+function createScannerOverlay(){
+
+ let overlay=document.getElementById('scannerOverlay');
+ if(overlay) return;
+
+ overlay=document.createElement('div');
+ overlay.id='scannerOverlay';
+ overlay.style.position='fixed';
+ overlay.style.inset='0';
+ overlay.style.zIndex='9999';
+ overlay.style.background='black';
+
+overlay.innerHTML=`
+<div id="scannerPreview" style="position:absolute;inset:0"></div>
+<canvas id="scannerCanvas" style="position:absolute;inset:0"></canvas>
+
+<button id="closeScanner"
+ style="position:absolute;top:16px;right:16px;
+ width:36px;height:36px;border-radius:18px;border:none;font-size:18px">
+ ✕
+</button>
+
+<div style="position:absolute;top:40px;width:100%;text-align:center;color:white;font-size:18px">
+ Hold receipt steady
+</div>
+
+<button id="cancelScanner"
+ style="position:absolute;bottom:40px;left:50%;transform:translateX(-50%);
+ padding:.7rem 1.2rem;border:none;border-radius:10px">
+ Cancel
+</button>
+`;
+
+ document.body.appendChild(overlay);
+
+ // attach handlers AFTER element exists
+ const closeBtn=document.getElementById('closeScanner');
+ const cancelBtn=document.getElementById('cancelScanner');
+ if(closeBtn)closeBtn.onclick=stopScanner;
+ if(cancelBtn)cancelBtn.onclick=stopScanner;
+}
+
+async function startScanLoop(){
+
+ const CameraPreview = window.Capacitor.Plugins.CameraPreview;
+ const canvas=document.getElementById('scannerCanvas');
+ const ctx=canvas.getContext('2d');
+
+ canvas.width=window.innerWidth;
+ canvas.height=window.innerHeight;
+
+ async function scan(){
+
+     scanFrameCounter++;
+
+     if(!scannerActive) return;
+
+     try{
+
+         const frame=await CameraPreview.captureSample({quality:40});
+
+         if(!frame?.value) return requestAnimationFrame(scan);
+
+         const img=new Image();
+         img.src="data:image/jpeg;base64,"+frame.value;
+
+         img.onload=()=>{
+
+             ctx.clearRect(0,0,canvas.width,canvas.height);
+
+             logScan("frame_process","ok",{frame:scanFrameCounter});
+             const now=performance.now();
+             cvMetrics.fps=Math.round(1000/(now-lastFrameTime));
+             lastFrameTime=now;
+
+             const quad=detectReceiptQuad(canvas.width,canvas.height,img);
+             cvMetrics.stable=scannerStableFrames;
+
+             if(quad){
+                 logScan("quad_found","ok",{frame:scanFrameCounter});
+                 logScan("quad_detected","info",{area:Math.abs((quad[1].x-quad[0].x)*(quad[2].y-quad[1].y))});
+                 drawQuad(ctx,quad);
+                 drawDebugOverlay(ctx,quad);
+
+                 if(lastQuad && quadSimilarity(quad,lastQuad)>0.92){
+                     scannerStableFrames++;
+                 }else{
+                     scannerStableFrames=0;
+                 }
+
+                 lastQuad=quad;
+
+                 if(scannerStableFrames>=3){
+                     logScan("stability_confirmed","ok",{stableFrames:scannerStableFrames});
+                     logScan("auto_capture","info",{stable:scannerStableFrames});
+                     autoCapture(frame.value);
+                     return;
+                 }
+
+             }
+
+         };
+
+     }catch(e){
+         console.warn('scan frame error',e);
+     }
+
+     scanLoopId=requestAnimationFrame(scan);
+ }
+
+ scan();
+}
+
+// OpenCV-based quad detection (returns 4 corner points)
+// Candidate scoring detection
+function detectReceiptQuad(w,h,img){
+
+ if(!window.cv || !img) return null;
+
+ try{
+
+  const src=cv.imread(img);
+  const gray=new cv.Mat();
+  const blur=new cv.Mat();
+  const edges=new cv.Mat();
+
+  cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+  cv.GaussianBlur(gray,blur,new cv.Size(5,5),0);
+  cv.Canny(blur,edges,75,200);
+
+  const contours=new cv.MatVector();
+  const hierarchy=new cv.Mat();
+
+  cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
+
+  let bestQuad=null;
+  let bestScore=0;
+  let bestArea=0;
+
+  for(let i=0;i<contours.size();i++){
+
+   const cnt=contours.get(i);
+   const peri=cv.arcLength(cnt,true);
+   const approx=new cv.Mat();
+
+   cv.approxPolyDP(cnt,approx,0.02*peri,true);
+
+   if(approx.rows===4){
+
+    const pts=[];
+
+    for(let j=0;j<4;j++){
+     const p=approx.intPtr(j,0);
+     pts.push({x:p[0],y:p[1]});
+    }
+
+    const rect=cv.boundingRect(approx);
+    const area=rect.width*rect.height;
+
+    const aspect=rect.width/rect.height;
+    const aspectScore=1-Math.min(Math.abs(aspect-0.4),1);
+    const areaScore=area/(w*h);
+
+    const score=areaScore*0.7 + aspectScore*0.3;
+
+    if(score>bestScore){
+     bestScore=score;
+     bestArea=area;
+     bestQuad=pts;
+    }
+   }
+
+   approx.delete();
+   cnt.delete();
+  }
+
+  src.delete();
+  gray.delete();
+  blur.delete();
+  edges.delete();
+  contours.delete();
+  hierarchy.delete();
+
+  if(!bestQuad) return null;
+
+  const minArea=(w*h)*0.08;
+  if(bestArea<minArea) return null;
+
+  return bestQuad;
+
+ }catch(e){
+  logScan("opencv_error","error");
+  console.warn("opencv detect error",e);
+  return null;
+ }
+
+}
+
+// Debug overlay
+function drawDebugOverlay(ctx,quad){
+
+    if(!cvDebugEnabled) return;
+
+    if(quad){
+        ctx.fillStyle='rgba(0,255,0,0.15)';
+        ctx.beginPath();
+        ctx.moveTo(quad[0].x,quad[0].y);
+        ctx.lineTo(quad[1].x,quad[1].y);
+        ctx.lineTo(quad[2].x,quad[2].y);
+        ctx.lineTo(quad[3].x,quad[3].y);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // ---- metrics overlay ----
+    ctx.fillStyle='rgba(0,0,0,0.55)';
+    ctx.fillRect(12,12,160,90);
+
+    ctx.fillStyle='#00ff9c';
+    ctx.font='12px monospace';
+
+    ctx.fillText('CV METRICS',20,28);
+    ctx.fillText('FPS: '+(cvMetrics.fps||0),20,44);
+    ctx.fillText('Stable: '+(cvMetrics.stable||0),20,60);
+    ctx.fillText('Frame: '+scanFrameCounter,20,76);
+}
+
+function drawQuad(ctx,q){
+
+ if(!q || q.length!==4) return;
+
+ ctx.lineWidth=4;
+ ctx.strokeStyle='rgba(0,180,255,0.95)';
+
+ ctx.beginPath();
+ ctx.moveTo(q[0].x,q[0].y);
+ ctx.lineTo(q[1].x,q[1].y);
+ ctx.lineTo(q[2].x,q[2].y);
+ ctx.lineTo(q[3].x,q[3].y);
+ ctx.closePath();
+ ctx.stroke();
+
+}
+
+// Perspective correction
+function perspectiveCorrect(img,quad){
+
+ if(!window.cv || !quad) return img.src;
+
+ try{
+
+  const src=cv.imread(img);
+
+  const width=Math.max(
+   Math.hypot(quad[0].x-quad[1].x,quad[0].y-quad[1].y),
+   Math.hypot(quad[2].x-quad[3].x,quad[2].y-quad[3].y)
+  );
+
+  const height=Math.max(
+   Math.hypot(quad[0].x-quad[3].x,quad[0].y-quad[3].y),
+   Math.hypot(quad[1].x-quad[2].x,quad[1].y-quad[2].y)
+  );
+
+  const srcTri=cv.matFromArray(4,1,cv.CV_32FC2,[
+   quad[0].x,quad[0].y,
+   quad[1].x,quad[1].y,
+   quad[2].x,quad[2].y,
+   quad[3].x,quad[3].y
+  ]);
+
+  const dstTri=cv.matFromArray(4,1,cv.CV_32FC2,[
+   0,0,
+   width,0,
+   width,height,
+   0,height
+  ]);
+
+  const M=cv.getPerspectiveTransform(srcTri,dstTri);
+  const dst=new cv.Mat();
+
+  cv.warpPerspective(src,dst,M,new cv.Size(width,height));
+
+  const canvas=document.createElement('canvas');
+  cv.imshow(canvas,dst);
+
+  src.delete();
+  dst.delete();
+  srcTri.delete();
+  dstTri.delete();
+  M.delete();
+
+  return canvas.toDataURL('image/jpeg',0.95);
+
+ }catch(e){
+  console.warn('perspective correction failed',e);
+  return img.src;
+ }
+
+}
+
+// OCR + total extraction
+async function detectReceiptTotal(imageData){
+
+ if(!window.Capacitor?.Plugins?.MLKitTextRecognition) return null;
+
+ try{
+
+  const { MLKitTextRecognition }=window.Capacitor.Plugins;
+
+  const result=await MLKitTextRecognition.recognizeText({
+   base64:imageData.split(',')[1]
+  });
+
+  if(!result?.text) return null;
+
+  const matches=result.text.match(/\d+\.\d{2}/g);
+
+  if(!matches) return null;
+
+  const numbers=matches.map(v=>parseFloat(v));
+
+  return Math.max(...numbers);
+
+ }catch(e){
+  console.warn('MLKit OCR error',e);
+  return null;
+ }
+
+}
+
+// Compare two quads using average corner distance
+function quadSimilarity(a,b){
+ if(!a||!b) return 0;
+
+ let total=0;
+ for(let i=0;i<4;i++){
+  const dx=a[i].x-b[i].x;
+  const dy=a[i].y-b[i].y;
+  total+=Math.sqrt(dx*dx+dy*dy);
+ }
+
+ const avg=total/4;
+ const diag=Math.hypot(window.innerWidth,window.innerHeight);
+ const score=1-(avg/diag);
+
+ return score;
+}
+
+// Auto capture after stability confirmed
+async function autoCapture(base64){
+
+ console.log('Receipt stabilized → capturing');
+
+ const imgData="data:image/jpeg;base64,"+base64;
+
+ const img=new Image();
+ img.src=imgData;
+
+ img.onload=async ()=>{
+
+  const corrected=perspectiveCorrect(img,lastQuad);
+
+ let preview=document.getElementById('receiptPreviewContainer');
+
+if(!preview){
+
+ preview=document.createElement('div');
+ preview.id='receiptPreviewContainer';
+ preview.style.position='fixed';
+ preview.style.bottom='10px';
+ preview.style.right='10px';
+ preview.style.zIndex='9999';
+
+ const img=document.createElement('img');
+ img.id='receiptPreview';
+ img.style.width='140px';
+ img.style.borderRadius='8px';
+ img.style.boxShadow='0 6px 16px rgba(0,0,0,.35)';
+
+ const close=document.createElement('button');
+ close.innerText='✕';
+ close.style.position='absolute';
+ close.style.top='-10px';
+ close.style.right='-10px';
+ close.style.width='28px';
+ close.style.height='28px';
+ close.style.borderRadius='14px';
+ close.style.border='none';
+
+ close.onclick=()=>preview.remove();
+
+ preview.appendChild(img);
+ preview.appendChild(close);
+
+ document.body.appendChild(preview);
+}
+
+document.getElementById('receiptPreview').src=corrected;
+
+
+
+  try{
+   const total=await detectReceiptTotal(corrected);
+   if(total){
+    inputRaw=String(total);
+    update();
+   }
+  }catch(e){
+   console.warn('total detect fail',e);
+  }
+
+ };
+
+ stopScanner();
+}
+
+async function stopScanner(){
+
+ scannerActive=false;
+ scannerStableFrames=0;
+ lastQuad=null;
+
+ if(scanLoopId) cancelAnimationFrame(scanLoopId);
+
+ try{
+  const CameraPreview = window.Capacitor?.Plugins?.CameraPreview;
+  if(CameraPreview) await CameraPreview.stop();
+ }catch(e){}
+
+ const overlay=document.getElementById('scannerOverlay');
+ if(overlay) overlay.remove();
+
+}
+
 
     </script>
-
-<script type="module" src="/js/bundle.js">
-</script>
+<script type="module" src="/js/bundle.js"></script>
 </body>
 </html>
