@@ -906,10 +906,10 @@ async function startScanLoop(){
  scan();
 }
 
-// OpenCV-based quad detection
+// OpenCV-based quad detection (returns 4 corner points)
 function detectReceiptQuad(w,h,img){
 
- if(!window.cv) return null;
+ if(!window.cv || !img) return null;
 
  try{
 
@@ -927,7 +927,7 @@ function detectReceiptQuad(w,h,img){
 
   cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
 
-  let best=null;
+  let bestQuad=null;
   let bestArea=0;
 
   for(let i=0;i<contours.size();i++){
@@ -938,14 +938,20 @@ function detectReceiptQuad(w,h,img){
 
    cv.approxPolyDP(cnt,approx,0.02*peri,true);
 
-   if(approx.rows>=4 && approx.rows<=6){
+   if(approx.rows===4){
+
+    const pts=[];
+    for(let j=0;j<4;j++){
+     const p=approx.intPtr(j,0);
+     pts.push({x:p[0],y:p[1]});
+    }
 
     const rect=cv.boundingRect(approx);
     const area=rect.width*rect.height;
 
     if(area>bestArea){
      bestArea=area;
-     best=rect;
+     bestQuad=pts;
     }
 
    }
@@ -961,18 +967,12 @@ function detectReceiptQuad(w,h,img){
   contours.delete();
   hierarchy.delete();
 
-  if(!best) return null;
+  if(!bestQuad) return null;
 
-  const minArea=(w*h)*0.10;
-
+  const minArea=(w*h)*0.08;
   if(bestArea<minArea) return null;
 
-  return {
-   x:best.x,
-   y:best.y,
-   w:best.width,
-   h:best.height
-  };
+  return bestQuad;
 
  }catch(e){
   console.warn('opencv detect error',e);
@@ -981,31 +981,59 @@ function detectReceiptQuad(w,h,img){
 
 }
 
+
 function drawQuad(ctx,q){
+
+ if(!q || q.length!==4) return;
 
  ctx.lineWidth=4;
  ctx.strokeStyle='rgba(0,180,255,0.95)';
- ctx.strokeRect(q.x,q.y,q.w,q.h);
+
+ ctx.beginPath();
+ ctx.moveTo(q[0].x,q[0].y);
+ ctx.lineTo(q[1].x,q[1].y);
+ ctx.lineTo(q[2].x,q[2].y);
+ ctx.lineTo(q[3].x,q[3].y);
+ ctx.closePath();
+ ctx.stroke();
 
 }
 
 // Perspective correction
-function perspectiveCorrect(img){
+function perspectiveCorrect(img,quad){
 
- if(!window.cv) return img.src;
+ if(!window.cv || !quad) return img.src;
 
  try{
 
   const src=cv.imread(img);
-  const dst=new cv.Mat();
 
-  const width=src.cols;
-  const height=src.rows;
+  const width=Math.max(
+   Math.hypot(quad[0].x-quad[1].x,quad[0].y-quad[1].y),
+   Math.hypot(quad[2].x-quad[3].x,quad[2].y-quad[3].y)
+  );
 
-  const srcTri=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,width,0,width,height,0,height]);
-  const dstTri=cv.matFromArray(4,1,cv.CV_32FC2,[0,0,width,0,width,height,0,height]);
+  const height=Math.max(
+   Math.hypot(quad[0].x-quad[3].x,quad[0].y-quad[3].y),
+   Math.hypot(quad[1].x-quad[2].x,quad[1].y-quad[2].y)
+  );
+
+  const srcTri=cv.matFromArray(4,1,cv.CV_32FC2,[
+   quad[0].x,quad[0].y,
+   quad[1].x,quad[1].y,
+   quad[2].x,quad[2].y,
+   quad[3].x,quad[3].y
+  ]);
+
+  const dstTri=cv.matFromArray(4,1,cv.CV_32FC2,[
+   0,0,
+   width,0,
+   width,height,
+   0,height
+  ]);
 
   const M=cv.getPerspectiveTransform(srcTri,dstTri);
+  const dst=new cv.Mat();
 
   cv.warpPerspective(src,dst,M,new cv.Size(width,height));
 
@@ -1081,7 +1109,7 @@ async function autoCapture(base64){
 
  img.onload=async ()=>{
 
-  const corrected=perspectiveCorrect(img);
+  const corrected=perspectiveCorrect(img,lastQuad);
 
   let preview=document.getElementById('receiptPreview');
 
