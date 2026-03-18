@@ -214,10 +214,10 @@ function createScannerUI(){
  videoEl.playsInline=true;
  videoEl.muted=true; // prevents mobile play button overlay
  videoEl.controls=false;
- videoEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover";
+ videoEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1";
 
  canvasEl=document.createElement("canvas");
- canvasEl.style.cssText="position:absolute;inset:0";
+ canvasEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none";
 
  const close=document.createElement("button");
  close.textContent="✕";
@@ -351,14 +351,16 @@ function detectReceipt(){
 function scanLoop(){
  if(!scannerActive) return;
 
+ ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
  ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
 
  const rect=detectReceipt();
+ if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
 
  // draw dynamic detection rectangle like phone face detection
  ctx.strokeStyle = stableFrames>5 ? "#00ff9c" : "rgba(255,255,255,.7)";
  ctx.lineWidth=4;
- ctx.strokeRect(rect.x,rect.y,rect.width,rect.height);
+ if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); }
 
  // HUD
  ctx.fillStyle="rgba(0,0,0,.55)";
@@ -366,6 +368,7 @@ function scanLoop(){
  ctx.fillStyle="#00ff9c";
  ctx.font="14px monospace";
  ctx.fillText("Receipt Detection",22,34);
+ ctx.fillText("Edges Active",22,48);
  ctx.fillText("Stability: "+stableFrames,22,56);
 
  // freeze frame once detection stabilizes
@@ -380,7 +383,7 @@ function scanLoop(){
 
   ctx.strokeStyle="#00ff9c";
   ctx.lineWidth=5;
-  ctx.strokeRect(rect.x,rect.y,rect.width,rect.height);
+  if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); }
 
   ctx.fillStyle="rgba(0,0,0,.65)";
   ctx.fillRect(12,12,250,70);
