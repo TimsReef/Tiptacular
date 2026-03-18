@@ -416,26 +416,85 @@ function warpReceipt(){
  src.delete(); dst.delete(); M.delete(); srcTri.delete(); dstTri.delete();
 
  return outCanvas;
+}
+
+// =============================
+// Text Region Detection (OpenCV)
+// =============================
+function extractTextRegions(canvas){
+ if(!cvReady) return [];
+
+ const src = cv.imread(canvas);
+ const gray = new cv.Mat();
+ const thresh = new cv.Mat();
+ const morph = new cv.Mat();
+ const contours = new cv.MatVector();
+ const hierarchy = new cv.Mat();
+
+ cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+ // Adaptive threshold to highlight text
+ cv.adaptiveThreshold(gray, thresh, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY_INV, 15, 10);
+
+ // Morph close to connect text lines
+ const kernel = cv.getStructuringElement(cv.MORPH_RECT, new cv.Size(25,5));
+ cv.morphologyEx(thresh, morph, cv.MORPH_CLOSE, kernel);
+
+ cv.findContours(morph, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+ const regions = [];
+ const areaMin = (canvas.width * canvas.height) * 0.001;
+
+ for(let i=0;i<contours.size();i++){
+  const cnt = contours.get(i);
+  const rect = cv.boundingRect(cnt);
+
+  // filter likely text lines
+  if(rect.width > rect.height*2 && rect.width*rect.height > areaMin){
+   const roi = src.roi(rect);
+   const c = document.createElement('canvas');
+   cv.imshow(c, roi);
+   regions.push({canvas:c, y:rect.y});
+   roi.delete();
+  }
+ }
+
+ // sort top-to-bottom
+ regions.sort((a,b)=>a.y-b.y);
+
+ const out = regions.map(r=>r.canvas);
+
+ src.delete(); gray.delete(); thresh.delete(); morph.delete(); contours.delete(); hierarchy.delete(); kernel.delete();
+
+ return out;
 }  
 
-async function runOCR(canvas){
- if(!tesseractReady || !canvas) return;
+async function runOCR(input){
+ if(!tesseractReady || !input) return;
 
-  const result = await Tesseract.recognize(canvas, "eng");
-  const text = result.data.text;
+ let text = "";
 
-  console.log("OCR TEXT:", text);
+ // Support single canvas or array of canvases (text regions)
+ const inputs = Array.isArray(input) ? input : [input];
 
-  // structured parsing
-  const parsed = parseReceipt(text);
+ for(const c of inputs){
+  try{
+   const result = await Tesseract.recognize(c, "eng");
+   text += "
+" + (result.data.text || "");
+  }catch(e){ console.error("OCR region failed", e); }
+ }
 
-  if(parsed.total){
-   inputRaw = parsed.total.toFixed(2);
-   update();
+ console.log("OCR TEXT:", text);
 
-   // smart tip suggestion
-   suggestTip(parsed.total);
-  }
+ const parsed = parseReceipt(text);
+
+ if(parsed.total){
+  inputRaw = parsed.total.toFixed(2);
+  update();
+  suggestTip(parsed.total);
+ }
+}
 }
 
 function parseReceipt(text){
@@ -540,9 +599,16 @@ function scanLoop(){
      // show corrected image
      ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
      ctx.drawImage(warped,0,0,canvasEl.width,canvasEl.height);
-    
-     //OCR
-     runOCR(warped);
+
+     // NEW: detect text regions first
+     const regions = extractTextRegions(warped);
+
+     if(regions && regions.length){
+       runOCR(regions);
+     }else{
+       runOCR(warped);
+     }
+    }
     }
 
     ctx.fillStyle="rgba(0,0,0,.65)";
