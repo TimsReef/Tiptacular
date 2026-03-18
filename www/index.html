@@ -500,7 +500,6 @@ async function runOCR(input){
   suggestTip(parsed.total);
  }
 }
-}
 
 function parseReceipt(text){
  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
@@ -520,20 +519,28 @@ function parseReceipt(text){
 
    let score=0;
 
-   // keyword boost (MOST IMPORTANT)
-   if(/total|amount|balance|due/i.test(line)) score+=10;
+   // 🔥 VERY STRONG SIGNALS
+   if(/grand total/i.test(line)) score+=25;
+   else if(/total/i.test(line)) score+=20;
+   else if(/amount|balance|due/i.test(line)) score+=15;
 
-   // ear bottom of receipt
-   score += (i / lines.length) * 3;
+   // Position (totals are near bottom)
+   score += (i / lines.length) * 6;
 
-   // realistic range boost
-   if(value > 1 && value < 1000) score+=2;
+   // Realistic receipt values
+   if(value > 5 && value < 5000) score+=4;
 
-   // penalize tiny values
-   if(value < 1) score-=2;
+   // Reject noise
+   if(value < 1) score-=10;
 
-   // prefer values ending in .00 / .99 (common totals)
-   if(/\.(00|99)$/.test(v)) score+=1;
+   // Common pricing endings
+   if(/\.(00|99|95|50)$/.test(v)) score+=2;
+
+   // Right-aligned numbers (very strong signal)
+   if(/\d+\.\d{2}\s*$/.test(line)) score+=3;
+
+   // Penalize obvious non-totals
+   if(/tax|subtotal/i.test(line)) score-=5;
 
    if(score > bestScore){
     bestScore = score;
@@ -542,7 +549,7 @@ function parseReceipt(text){
   });
  });
 
- // fallback
+ // fallback safety
  if(!bestTotal && prices.length){
   bestTotal = Math.max(...prices);
  }
