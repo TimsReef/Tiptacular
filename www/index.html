@@ -267,71 +267,87 @@ function stopScanner(){
  if(overlay) overlay.remove();
 }
 
-// dynamic rectangle detection (face‑style behavior)
+// =============================
+// OpenCV Receipt Detection
+// =============================
+
 let stableFrames=0;
 let frozen=false;
 let detectedRect=null;
 let detectedQuad=null;
+let cvReady=false;
+
+// load OpenCV
+(function loadOpenCV(){
+ if(window.cv){ cvReady=true; return; }
+ const s=document.createElement('script');
+ s.src='https://docs.opencv.org/4.x/opencv.js';
+ s.onload=()=>{
+  cv['onRuntimeInitialized']=()=>{
+   cvReady=true;
+   console.log('OpenCV ready');
+  };
+ };
+ document.body.appendChild(s);
+})();
 
 function detectReceipt(){
- const w=canvasEl.width;
- const h=canvasEl.height;
+ if(!cvReady) return detectedRect;
 
- const frame=ctx.getImageData(0,0,w,h);
- const data=frame.data;
+ const src=cv.imread(canvasEl);
+ const gray=new cv.Mat();
+ const blurred=new cv.Mat();
+ const edges=new cv.Mat();
+ const contours=new cv.MatVector();
+ const hierarchy=new cv.Mat();
 
- // grayscale
- const gray=new Uint8Array(w*h);
- for(let i=0;i<w*h;i++){
-  const r=data[i*4];
-  const g=data[i*4+1];
-  const b=data[i*4+2];
-  gray[i]=(r*0.3+g*0.59+b*0.11);
- }
+ cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
+ cv.GaussianBlur(gray,blurred,new cv.Size(5,5),0);
+ cv.Canny(blurred,edges,75,200);
 
- // sobel edges
- const edges=new Uint8Array(w*h);
- for(let y=1;y<h-1;y++){
-  for(let x=1;x<w-1;x++){
-   const i=y*w+x;
+ cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
 
-   const gx = (
-     -gray[i-w-1] -2*gray[i-1] -gray[i+w-1] +
-      gray[i-w+1] +2*gray[i+1] +gray[i+w+1]
-   );
+ let bestQuad=null;
+ let maxArea=0;
 
-   const gy = (
-     -gray[i-w-1] -2*gray[i-w] -gray[i-w+1] +
-      gray[i+w-1] +2*gray[i+w] +gray[i+w+1]
-   );
+ for(let i=0;i<contours.size();i++){
+  const cnt=contours.get(i);
+  const peri=cv.arcLength(cnt,true);
+  const approx=new cv.Mat();
+  cv.approxPolyDP(cnt,approx,0.02*peri,true);
 
-   const mag=Math.sqrt(gx*gx+gy*gy);
-   edges[i]=mag>90?255:0;
+  if(approx.rows===4){
+   const area=cv.contourArea(cnt);
+   if(area>maxArea){
+    maxArea=area;
+    bestQuad=approx;
+   }
   }
  }
 
- // collect edge points
- const points=[];
- for(let y=0;y<h;y+=3){
-  for(let x=0;x<w;x+=3){
-   if(edges[y*w+x]) points.push({x,y});
-  }
- }
-
- if(points.length<800){
+ if(!bestQuad){
   stableFrames=Math.max(0,stableFrames-1);
+  src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
   return detectedRect;
  }
 
- // approximate quad via extreme points
- let tl={x:w,y:h}, tr={x:0,y:h}, bl={x:w,y:0}, br={x:0,y:0};
-
- for(const p of points){
-  if(p.x+p.y < tl.x+tl.y) tl=p;
-  if((w-p.x)+p.y < (w-tr.x)+tr.y) tr=p;
-  if(p.x+(h-p.y) < bl.x+(h-bl.y)) bl=p;
-  if((w-p.x)+(h-p.y) < (w-br.x)+(h-br.y)) br=p;
+ const pts=[];
+ for(let i=0;i<4;i++){
+  pts.push({
+   x:bestQuad.intPtr(i,0)[0],
+   y:bestQuad.intPtr(i,0)[1]
+  });
  }
+
+ // sort points (tl,tr,br,bl)
+ pts.sort((a,b)=>a.y-b.y);
+ const top=pts.slice(0,2).sort((a,b)=>a.x-b.x);
+ const bottom=pts.slice(2,4).sort((a,b)=>a.x-b.x);
+
+ const tl=top[0];
+ const tr=top[1];
+ const bl=bottom[0];
+ const br=bottom[1];
 
  const rect={
   x:tl.x,
@@ -340,22 +356,19 @@ function detectReceipt(){
   height:bl.y-tl.y
  };
 
- // confidence
- const aspect=(rect.height||1)/(rect.width||1);
+ const w=canvasEl.width;
+ const h=canvasEl.height;
  const area=(rect.width*rect.height)/(w*h);
 
- const confidence = (
-  (aspect>1.2 && aspect<6 ? 0.5:0) +
-  (area>0.2 && area<0.95 ? 0.5:0)
- );
-
- if(confidence>0.7){
+ if(area>0.2){
   stableFrames++;
   detectedRect=rect;
   detectedQuad={tl,tr,br,bl};
  }else{
   stableFrames=Math.max(0,stableFrames-1);
  }
+
+ src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
 
  return detectedRect || rect;
 }
