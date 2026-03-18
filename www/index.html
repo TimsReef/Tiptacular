@@ -418,21 +418,76 @@ function warpReceipt(){
  return outCanvas;
 }  
 
-  async function runOCR(canvas){
+async function runOCR(canvas){
  if(!tesseractReady || !canvas) return;
 
- const result = await Tesseract.recognize(canvas, "eng");
- const text = result.data.text;
+  const result = await Tesseract.recognize(canvas, "eng");
+  const text = result.data.text;
 
- console.log("OCR TEXT:", text);
+  console.log("OCR TEXT:", text);
 
- const match =
-  text.match(/total\\s*\\$?\\s*(\\d+\\.\\d{2})/i) ||
-  text.match(/\\$\\s*(\\d+\\.\\d{2})/);
+  // structured parsing
+  const parsed = parseReceipt(text);
 
- if(match){
-  inputRaw = match[1];
-  update();
+  if(parsed.total){
+   inputRaw = parsed.total.toFixed(2);
+   update();
+
+   // smart tip suggestion
+   suggestTip(parsed.total);
+  }
+}
+
+function parseReceipt(text){
+ const lines = text.split("\n")
+  .map(l => l.trim())
+  .filter(Boolean);
+
+ const prices = [];
+
+ lines.forEach(line=>{
+  const matches = line.match(/(\d+\.\d{2})/g);
+  if(matches){
+   matches.forEach(v => prices.push(parseFloat(v)));
+  }
+ });
+
+ // Heuristic: total is largest value
+ const total = prices.length ? Math.max(...prices) : null;
+
+ return {
+  total,
+  prices,
+  lineItems: prices.slice(0, -1) // rough assumption
+ };
+}
+
+function suggestTip(total){
+ if(!total) return;
+
+ if(total < 20){
+  setTip(20);   // small bills → higher %
+ }else if(total < 100){
+  setTip(18);   // normal
+ }else{
+  setTip(15);   // large bills → lower %
+ }
+} 
+
+async function runNativeOCR(base64Image){
+ if(!window.Capacitor) return null;
+
+ try{
+  const { TextRecognition } = Capacitor.Plugins;
+
+  const result = await TextRecognition.recognize({
+   image: base64Image
+  });
+
+  return result.text;
+ }catch(e){
+  console.error("ML Kit OCR failed", e);
+  return null;
  }
 }
   
