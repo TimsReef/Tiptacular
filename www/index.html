@@ -271,6 +271,7 @@ function stopScanner(){
 let stableFrames=0;
 let frozen=false;
 let detectedRect=null;
+let detectedQuad=null;
 
 function detectReceipt(){
  const w=canvasEl.width;
@@ -288,7 +289,7 @@ function detectReceipt(){
   gray[i]=(r*0.3+g*0.59+b*0.11);
  }
 
- // edge detection (improved sobel)
+ // sobel edges
  const edges=new Uint8Array(w*h);
  for(let y=1;y<h-1;y++){
   for(let x=1;x<w-1;x++){
@@ -305,62 +306,53 @@ function detectReceipt(){
    );
 
    const mag=Math.sqrt(gx*gx+gy*gy);
-   edges[i]=mag>80?255:0;
+   edges[i]=mag>90?255:0;
   }
  }
 
- // simple dilation to strengthen edges
- for(let y=1;y<h-1;y++){
-  for(let x=1;x<w-1;x++){
-   const i=y*w+x;
-   if(edges[i]) continue;
-   if(edges[i-1]||edges[i+1]||edges[i-w]||edges[i+w]){
-    edges[i]=180;
-   }
+ // collect edge points
+ const points=[];
+ for(let y=0;y<h;y+=3){
+  for(let x=0;x<w;x+=3){
+   if(edges[y*w+x]) points.push({x,y});
   }
  }
 
- // find bounding box (largest contour approximation)
- let minX=w, minY=h, maxX=0, maxY=0;
- let count=0;
-
- for(let y=0;y<h;y+=2){
-  for(let x=0;x<w;x+=2){
-   if(edges[y*w+x]>0){
-    count++;
-    if(x<minX) minX=x;
-    if(y<minY) minY=y;
-    if(x>maxX) maxX=x;
-    if(y>maxY) maxY=y;
-   }
-  }
- }
-
- // fail fast if no strong edges
- if(count<1500){
+ if(points.length<800){
   stableFrames=Math.max(0,stableFrames-1);
   return detectedRect;
  }
 
+ // approximate quad via extreme points
+ let tl={x:w,y:h}, tr={x:0,y:h}, bl={x:w,y:0}, br={x:0,y:0};
+
+ for(const p of points){
+  if(p.x+p.y < tl.x+tl.y) tl=p;
+  if((w-p.x)+p.y < (w-tr.x)+tr.y) tr=p;
+  if(p.x+(h-p.y) < bl.x+(h-bl.y)) bl=p;
+  if((w-p.x)+(h-p.y) < (w-br.x)+(h-br.y)) br=p;
+ }
+
  const rect={
-  x:minX,
-  y:minY,
-  width:maxX-minX,
-  height:maxY-minY
+  x:tl.x,
+  y:tl.y,
+  width:tr.x-tl.x,
+  height:bl.y-tl.y
  };
 
- // confidence scoring
- const aspect=rect.height/(rect.width||1);
+ // confidence
+ const aspect=(rect.height||1)/(rect.width||1);
  const area=(rect.width*rect.height)/(w*h);
 
  const confidence = (
-  (aspect>1.3 && aspect<6 ? 0.5:0) +
-  (area>0.15 && area<0.95 ? 0.5:0)
+  (aspect>1.2 && aspect<6 ? 0.5:0) +
+  (area>0.2 && area<0.95 ? 0.5:0)
  );
 
  if(confidence>0.7){
   stableFrames++;
   detectedRect=rect;
+  detectedQuad={tl,tr,br,bl};
  }else{
   stableFrames=Math.max(0,stableFrames-1);
  }
@@ -381,6 +373,16 @@ function scanLoop(){
  ctx.strokeStyle = stableFrames>5 ? "#00ff9c" : "rgba(255,255,255,.7)";
  ctx.lineWidth=4;
  if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); }
+
+ // draw quad corners if available
+ if(detectedQuad){
+  ctx.fillStyle="#00ff9c";
+  [detectedQuad.tl, detectedQuad.tr, detectedQuad.br, detectedQuad.bl].forEach(p=>{
+   ctx.beginPath();
+   ctx.arc(p.x,p.y,6,0,Math.PI*2);
+   ctx.fill();
+  });
+ }
 
  // HUD
  ctx.fillStyle="rgba(0,0,0,.55)";
@@ -404,6 +406,16 @@ function scanLoop(){
   ctx.strokeStyle="#00ff9c";
   ctx.lineWidth=5;
   if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); }
+
+ // draw quad corners if available
+ if(detectedQuad){
+  ctx.fillStyle="#00ff9c";
+  [detectedQuad.tl, detectedQuad.tr, detectedQuad.br, detectedQuad.bl].forEach(p=>{
+   ctx.beginPath();
+   ctx.arc(p.x,p.y,6,0,Math.PI*2);
+   ctx.fill();
+  });
+ }
 
   ctx.fillStyle="rgba(0,0,0,.65)";
   ctx.fillRect(12,12,250,70);
