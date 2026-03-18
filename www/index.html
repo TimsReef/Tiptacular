@@ -291,6 +291,18 @@ let cvReady=false;
  document.body.appendChild(s);
 })();
 
+let tesseractReady = false;
+
+(function loadTesseract(){
+ const s = document.createElement("script");
+ s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+ s.onload = () => {
+  tesseractReady = true;
+  console.log("Tesseract ready");
+ };
+ document.body.appendChild(s);
+})();
+  
 function detectReceipt(){
  if(!cvReady) return detectedRect;
 
@@ -372,7 +384,58 @@ function detectReceipt(){
 
  return detectedRect || rect;
 }
+  
+function warpReceipt(){
+ if(!cvReady || !detectedQuad) return null;
 
+ const src = cv.imread(canvasEl);
+ const dsize = new cv.Size(600, 800);
+
+ const srcTri = cv.matFromArray(4,1,cv.CV_32FC2,[
+  detectedQuad.tl.x, detectedQuad.tl.y,
+  detectedQuad.tr.x, detectedQuad.tr.y,
+  detectedQuad.br.x, detectedQuad.br.y,
+  detectedQuad.bl.x, detectedQuad.bl.y
+ ]);
+
+ const dstTri = cv.matFromArray(4,1,cv.CV_32FC2,[
+  0,0,
+  dsize.width,0,
+  dsize.width,dsize.height,
+  0,dsize.height
+ ]);
+
+ const M = cv.getPerspectiveTransform(srcTri, dstTri);
+ const dst = new cv.Mat();
+
+ cv.warpPerspective(src, dst, M, dsize);
+
+ const outCanvas = document.createElement("canvas");
+ cv.imshow(outCanvas, dst);
+
+ src.delete(); dst.delete(); M.delete(); srcTri.delete(); dstTri.delete();
+
+ return outCanvas;
+}  
+
+  async function runOCR(canvas){
+ if(!tesseractReady || !canvas) return;
+
+ const result = await Tesseract.recognize(canvas, "eng");
+ const text = result.data.text;
+
+ console.log("OCR TEXT:", text);
+
+ const match =
+  text.match(/total\\s*\\$?\\s*(\\d+\\.\\d{2})/i) ||
+  text.match(/\\$\\s*(\\d+\\.\\d{2})/);
+
+ if(match){
+  inputRaw = match[1];
+  update();
+ }
+}
+  
 function scanLoop(){
  if(!scannerActive) return;
 
