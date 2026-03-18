@@ -504,43 +504,75 @@ async function runOCR(input){
 function parseReceipt(text){
  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
 
- let bestTotal=null;
- let bestScore=-Infinity;
+ let bestTotal = null;
+ let bestScore = -Infinity;
+ const prices = [];
 
- const prices=[];
+ // =============================
+ // PASS 1: ANCHOR-BASED DETECTION
+ // =============================
+
+ for(let i=0;i<lines.length;i++){
+  const line = lines[i];
+
+  // Look for strong anchors
+  if(/grand total/i.test(line) || /total/i.test(line) || /amount due|balance due/i.test(line)){
+   
+   const matches = line.match(/(\d+\.\d{2})/g);
+
+   if(matches){
+    // 🎯 take RIGHT-MOST number (most likely total)
+    const value = parseFloat(matches[matches.length - 1]);
+
+    return {
+     total: value,
+     prices: [value]
+    };
+   }
+
+   // 🔥 If number is NOT on same line → check next line
+   if(i < lines.length - 1){
+    const next = lines[i+1];
+    const nextMatch = next.match(/(\d+\.\d{2})/);
+
+    if(nextMatch){
+     const value = parseFloat(nextMatch[1]);
+
+     return {
+      total: value,
+      prices: [value]
+     };
+    }
+   }
+  }
+ }
+
+ // =============================
+ // PASS 2: SCORING FALLBACK
+ // =============================
 
  lines.forEach((line,i)=>{
-  const matches=line.match(/(\d+\.\d{2})/g);
+  const matches = line.match(/(\d+\.\d{2})/g);
   if(!matches) return;
 
   matches.forEach(v=>{
-   const value=parseFloat(v);
+   const value = parseFloat(v);
    prices.push(value);
 
-   let score=0;
+   let score = 0;
 
-   // 🔥 VERY STRONG SIGNALS
-   if(/grand total/i.test(line)) score+=25;
-   else if(/total/i.test(line)) score+=20;
-   else if(/amount|balance|due/i.test(line)) score+=15;
+   if(/total/i.test(line)) score += 20;
+   if(/amount|due|balance/i.test(line)) score += 15;
 
-   // Position (totals are near bottom)
    score += (i / lines.length) * 6;
 
-   // Realistic receipt values
-   if(value > 5 && value < 5000) score+=4;
+   if(value > 5 && value < 5000) score += 4;
+   if(value < 1) score -= 10;
 
-   // Reject noise
-   if(value < 1) score-=10;
+   if(/tax|subtotal|discount/i.test(line)) score -= 10;
 
-   // Common pricing endings
-   if(/\.(00|99|95|50)$/.test(v)) score+=2;
-
-   // Right-aligned numbers (very strong signal)
-   if(/\d+\.\d{2}\s*$/.test(line)) score+=3;
-
-   // Penalize obvious non-totals
-   if(/tax|subtotal/i.test(line)) score-=5;
+   if(/\.(00|99|95|50)$/.test(v)) score += 2;
+   if(/\d+\.\d{2}\s*$/.test(line)) score += 3;
 
    if(score > bestScore){
     bestScore = score;
