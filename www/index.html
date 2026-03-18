@@ -291,17 +291,6 @@ let cvReady=false;
  document.body.appendChild(s);
 })();
 
-let tesseractReady = false;
-
-(function loadTesseract(){
- const s = document.createElement("script");
- s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
- s.onload = () => {
-  tesseractReady = true;
-  console.log("Tesseract ready");
- };
- document.body.appendChild(s);
-})();
   
 function detectReceipt(){
  if(!cvReady) return detectedRect;
@@ -478,21 +467,30 @@ function extractTextRegions(canvas){
 }  
 
 async function runOCR(input){
- if(!tesseractReady || !input) return;
+ if(!input) return;
 
- let text = "";
  const inputs = Array.isArray(input) ? input : [input];
+ let combinedText = "";
 
  for(const c of inputs){
   try{
-   const result = await Tesseract.recognize(c, "eng");
-   text += "\n" + (result.data.text || "");
-  }catch(e){ console.error("OCR region failed", e); }
+   // convert canvas → base64
+   const base64 = c.toDataURL("image/jpeg", 0.9);
+
+   // ML Kit OCR
+   const text = await runNativeOCR(base64);
+
+   if(text){
+    combinedText += "\n" + text;
+   }
+  }catch(e){
+   console.error("ML Kit OCR failed", e);
+  }
  }
 
- console.log("OCR TEXT:", text);
+ console.log("ML KIT OCR TEXT:", combinedText);
 
- const parsed = parseReceipt(text);
+ const parsed = parseReceipt(combinedText);
 
  if(parsed.total){
   inputRaw = parsed.total.toFixed(2);
@@ -500,7 +498,6 @@ async function runOCR(input){
   suggestTip(parsed.total);
  }
 }
-
 function parseReceipt(text){
  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
 
@@ -605,7 +602,10 @@ function suggestTip(total){
 } 
 
 async function runNativeOCR(base64Image){
- if(!window.Capacitor) return null;
+ if(!window.Capacitor || !Capacitor.Plugins){
+  console.warn("ML Kit not available (web fallback disabled)");
+  return null;
+ }
 
  try{
   const { TextRecognition } = Capacitor.Plugins;
@@ -614,10 +614,10 @@ async function runNativeOCR(base64Image){
    image: base64Image
   });
 
-  return result.text;
+  return result?.text || "";
  }catch(e){
   console.error("ML Kit OCR failed", e);
-  return null;
+  return "";
  }
 }
   
