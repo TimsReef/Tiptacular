@@ -276,44 +276,76 @@ function detectReceipt(){
  const w=canvasEl.width;
  const h=canvasEl.height;
 
- // scan center bands for bright paper regions
- const scanBands=6;
- let bestRect=null;
- let bestScore=0;
+ const frame=ctx.getImageData(0,0,w,h);
+ const data=frame.data;
 
- for(let i=0;i<scanBands;i++){
-  const bandW=w*0.55;
-  const bandH=h*0.65;
-  const x=(w-bandW)/2 + (Math.sin(i)*20);
-  const y=(h-bandH)/2 + (Math.cos(i)*20);
+ // grayscale + simple edge detection
+ const edges=new Uint8Array(w*h);
 
-  const sample=ctx.getImageData(x+bandW/2-20,y+bandH/2-20,40,40);
-  let bright=0;
+ for(let y=1;y<h-1;y++){
+  for(let x=1;x<w-1;x++){
+   const i=(y*w+x)*4;
 
-  for(let p=0;p<sample.data.length;p+=4){
-   const r=sample.data[p];
-   const g=sample.data[p+1];
-   const b=sample.data[p+2];
-   const lum=(r+g+b)/3;
-   if(lum>180) bright++;
-  }
+   const gx = (
+     data[i-4] + 2*data[i] + data[i+4]
+     - data[i-4 + w*4] - 2*data[i + w*4] - data[i+4 + w*4]
+   );
 
-  const score=bright/(sample.data.length/4);
+   const gy = (
+     data[i-4] + 2*data[i-4 + w*4] + data[i-4 + w*8]
+     - data[i+4] - 2*data[i+4 + w*4] - data[i+4 + w*8]
+   );
 
-  if(score>bestScore){
-   bestScore=score;
-   bestRect={x:x,y:y,width:bandW,height:bandH};
+   const mag=Math.abs(gx)+Math.abs(gy);
+   edges[y*w+x]=mag>200?255:0;
   }
  }
 
- if(bestScore>0.55){
+ // find bounding box of largest edge cluster (simple contour approximation)
+ let minX=w, minY=h, maxX=0, maxY=0;
+ let count=0;
+
+ for(let y=0;y<h;y+=2){
+  for(let x=0;x<w;x+=2){
+   if(edges[y*w+x]){
+    count++;
+    if(x<minX) minX=x;
+    if(y<minY) minY=y;
+    if(x>maxX) maxX=x;
+    if(y>maxY) maxY=y;
+   }
+  }
+ }
+
+ if(count<500){
+  stableFrames=Math.max(0,stableFrames-1);
+  return detectedRect;
+ }
+
+ const rect={
+  x:minX,
+  y:minY,
+  width:maxX-minX,
+  height:maxY-minY
+ };
+
+ // confidence scoring (aspect ratio + size)
+ const aspect=rect.height/(rect.width||1);
+ const area=(rect.width*rect.height)/(w*h);
+
+ const confidence = (
+  (aspect>1.2 && aspect<5 ? 0.5:0) +
+  (area>0.2 && area<0.9 ? 0.5:0)
+ );
+
+ if(confidence>0.7){
   stableFrames++;
-  detectedRect=bestRect;
+  detectedRect=rect;
  }else{
   stableFrames=Math.max(0,stableFrames-1);
  }
 
- return detectedRect || bestRect;
+ return detectedRect || rect;
 }
 
 function scanLoop(){
