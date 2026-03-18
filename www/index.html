@@ -1008,9 +1008,10 @@ function createScannerOverlay(){
 
 overlay.innerHTML=`
 <div id="scannerPreview" style="position:absolute;inset:0"></div>
-<canvas id="scannerCanvas" style="position:absolute;inset:0"></canvas>
+<canvas id="scannerCanvas" style="position:absolute;inset:0;pointer-events:none"></canvas>
 
-<button id="closeScanner"
+<div id="scannerUI" style="position:absolute;inset:0;pointer-events:none">
+<button id="closeScanner" style="pointer-events:auto"
  style="position:absolute;top:16px;right:16px;
  width:36px;height:36px;border-radius:18px;border:none;font-size:18px">
  ✕
@@ -1025,6 +1026,7 @@ overlay.innerHTML=`
  padding:.7rem 1.2rem;border:none;border-radius:10px">
  Cancel
 </button>
+</div>
 `;
 
  document.body.appendChild(overlay);
@@ -1212,7 +1214,6 @@ function detectReceiptQuad(w,h,img){
 // Debug overlay
 function drawDebugOverlay(ctx,quad){
 
- if(!cvDebugEnabled) return;
 
  if(quad){
   ctx.fillStyle='rgba(0,255,0,0.15)';
@@ -1225,9 +1226,8 @@ function drawDebugOverlay(ctx,quad){
   ctx.fill();
  }
 
- // ---- metrics overlay ----
  ctx.fillStyle='rgba(0,0,0,0.55)';
- ctx.fillRect(12,12,160,90);
+ ctx.fillRect(12,12,170,95);
 
  ctx.fillStyle='#00ff9c';
  ctx.font='12px monospace';
@@ -1236,7 +1236,9 @@ function drawDebugOverlay(ctx,quad){
  ctx.fillText('FPS: '+(cvMetrics.fps||0),20,44);
  ctx.fillText('Stable: '+(cvMetrics.stable||0),20,60);
  ctx.fillText('Frame: '+scanFrameCounter,20,76);
+ ctx.fillText('Edges: '+(cvMetrics.edges||0),20,92);
 }
+
 
 
 function drawQuad(ctx,q){
