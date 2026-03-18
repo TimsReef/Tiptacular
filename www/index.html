@@ -471,35 +471,32 @@ function scanLoop(){
 
  // freeze frame once detection stabilizes
  if(stableFrames>18 && !frozen){
-  frozen=true;
-  scannerActive=false;
+    frozen = true;
+    scannerActive = false;
+    
+    // freeze frame
+    ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
+    videoEl.pause();
+    
+    // perspective correction
+    const warped = warpReceipt();
 
-  // capture final frame
-  ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
+    if(warped){
+     // show corrected image
+     ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
+     ctx.drawImage(warped,0,0,canvasEl.width,canvasEl.height);
+    
+     //OCR
+     runOCR(warped);
+    }
 
-  videoEl.pause();
+    ctx.fillStyle="rgba(0,0,0,.65)";
+    ctx.fillRect(12,12,260,70);
+    ctx.fillStyle="#00ff9c";
+    ctx.fillText("Receipt Scanned",22,36);
+    ctx.fillText("Running OCR...",22,58);
 
-  ctx.strokeStyle="#00ff9c";
-  ctx.lineWidth=5;
-  if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); }
-
- // draw quad corners if available
- if(detectedQuad){
-  ctx.fillStyle="#00ff9c";
-  [detectedQuad.tl, detectedQuad.tr, detectedQuad.br, detectedQuad.bl].forEach(p=>{
-   ctx.beginPath();
-   ctx.arc(p.x,p.y,6,0,Math.PI*2);
-   ctx.fill();
-  });
- }
-
-  ctx.fillStyle="rgba(0,0,0,.65)";
-  ctx.fillRect(12,12,250,70);
-  ctx.fillStyle="#00ff9c";
-  ctx.fillText("Receipt Detected",22,36);
-  ctx.fillText("Image Frozen",22,58);
-
-  return;
+    return;
  }
 
  scanLoopId=requestAnimationFrame(scanLoop);
