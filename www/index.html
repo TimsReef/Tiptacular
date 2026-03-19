@@ -278,18 +278,6 @@ let detectedQuad=null;
 let cvReady=false;
 
 // load OpenCV
-//(function loadOpenCV(){
-// if(window.cv){ cvReady=true; return; }
-// const s=document.createElement('script');
-// s.src='https://docs.opencv.org/4.x/opencv.js';
-// s.onload=()=>{
-//  cv['onRuntimeInitialized']=()=>{
-//   cvReady=true;
-//   console.log('OpenCV ready');
-//  };
-// };
-// document.body.appendChild(s);
-//})();
 
   
 function detectReceipt(){
@@ -603,9 +591,22 @@ function suggestTip(total){
 
 async function runNativeOCR(base64Image){
  if(!window.Capacitor || !Capacitor.Plugins){
-  console.warn("ML Kit not available (web fallback disabled)");
-  return null;
+  console.warn("ImageToText not available (web preview)");
+  return "";
  }
+
+ try{
+  // Using @capacitor-community/image-to-text
+  const result = await Capacitor.Plugins.ImageToText.recognize({
+   base64: base64Image
+  });
+
+  return result?.text || "";
+ }catch(e){
+  console.error("ImageToText OCR failed", e);
+  return "";
+ }
+}
 
  try{
   const { TextRecognition } = Capacitor.Plugins;
