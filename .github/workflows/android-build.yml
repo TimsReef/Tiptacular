@@ -11,14 +11,14 @@ jobs:
       contents: write  # Required to create/update releases
       packages: write
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Set build number environment variable
         run: |
           # Extract version from package.json
           VERSION=$(jq -r '.version' package.json)
           echo "GIT_BUILD_NUMBER=${{ format('{0}.{1}', env.VERSION, github.run_number) }}" >> $GITHUB_ENV
-
-      - name: Checkout Repository
-        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4.0.2
