@@ -207,7 +207,7 @@ let scanLoopId=null;
 function createScannerUI(){
  const overlay=document.createElement("div");
  overlay.id="scannerOverlay";
- overlay.style.cssText="position:fixed;inset:0;background:black;z-index:9999";
+ overlay.style.cssText="position:fixed;inset:0;background:black;z-index:999";
 
  videoEl=document.createElement("video");
  videoEl.autoplay=true;
@@ -221,7 +221,7 @@ function createScannerUI(){
 
  const close=document.createElement("button");
  close.textContent="✕";
- close.style.cssText="position:absolute;top:20px;right:20px;font-size:24px;border:none;background:rgba(0,0,0,.6);color:white;border-radius:10px;width:40px;height:40px";
+ close.style.cssText="position:absolute;top:20px;right:20px;font-size:24px;border:none;background:rgba(0,0,0,.6);color:white;border-radius:10px;width:40px;height:40px;z-index:9999";
  close.onclick=stopScanner;
 
  overlay.appendChild(videoEl);
