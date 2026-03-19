@@ -11,6 +11,9 @@ jobs:
       contents: write  # Required to create/update releases
       packages: write
     steps:
+      - name: Print the build number
+        run: echo "The build number is ${{ github.run_number }}"
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 

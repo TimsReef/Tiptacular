@@ -15,17 +15,17 @@
     "@capacitor-community/camera-preview": "^7.0.5",
     "@capacitor-community/image-to-text": "github:capacitor-community/image-to-text",
     "@capacitor/android": "^8.2.0",
-    "@capacitor/assets": "^3.0.5",
     "@capacitor/camera": "^8.0.2",
-    "@capacitor/cli": "^8.2.0",
     "@capacitor/core": "^8.2.0",
     "@capacitor/haptics": "^8.0.1",
     "@capacitor/ios": "^8.2.0",
     "@capacitor/splash-screen": "^8.0.1",
-    "@techstark/opencv-js": "^4.12.0-release.1",
-    "@trapezedev/configure": "^7.1.3"
+    "@techstark/opencv-js": "^4.12.0-release.1"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.2.0",
+    "@trapezedev/configure": "^7.1.3",
     "typescript": "^5.9.3",
     "webpack": "^5.105.4",
     "webpack-cli": "^7.0.0"
