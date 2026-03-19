@@ -4,15 +4,13 @@ vars:
 
 platforms:
   ios:
+    version: $GITHUB_BUILD_NUMBER
     targets:
       App:
         plist:
           - entries:
               - NSCameraUsageDescription: "This app needs access to the camera to take photos."
               - NSPhotoLibraryUsageDescription: "This app needs access to photos."
-    version: $GITHUB_BUILD_NUMBER
-    targets:
-      App:
         buildNumber: $GITHUB_BUILD_NUMBER
   android:
     manifest:
