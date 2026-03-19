@@ -278,6 +278,18 @@ let detectedQuad=null;
 let cvReady=false;
 
 // load OpenCV
+(function loadOpenCV(){
+ if(window.cv){ cvReady=true; return; }
+ const s=document.createElement('script');
+ s.src='https://docs.opencv.org/4.x/opencv.js';
+ s.onload=()=>{
+  cv['onRuntimeInitialized']=()=>{
+   cvReady=true;
+   console.log('OpenCV ready');
+  };
+ };
+ document.body.appendChild(s);
+})();
 
   
 function detectReceipt(){
@@ -596,7 +608,6 @@ async function runNativeOCR(base64Image){
  }
 
  try{
-  // Using @capacitor-community/image-to-text
   const result = await Capacitor.Plugins.ImageToText.recognize({
    base64: base64Image
   });
@@ -607,22 +618,8 @@ async function runNativeOCR(base64Image){
   return "";
  }
 }
-
- try{
-  const { TextRecognition } = Capacitor.Plugins;
-
-  const result = await TextRecognition.recognize({
-   image: base64Image
-  });
-
-  return result?.text || "";
- }catch(e){
-  console.error("ML Kit OCR failed", e);
-  return "";
- }
-}
   
-function scanLoop(){
+async function scanLoop(){
  if(!scannerActive) return;
 
  ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
@@ -659,7 +656,7 @@ function scanLoop(){
     // lightweight OCR sampling (first few regions only for speed)
     const sample = regions.slice(-3);
 
-    sample.forEach(async (c,i)=>{
+    for (const c of sample) {
      const base64=c.toDataURL("image/jpeg",0.7);
      const text=await runNativeOCR(base64);
 
@@ -670,7 +667,7 @@ function scanLoop(){
        confidence=Math.min(1, confidence+0.2);
       }
      }
-    });
+        }
 
     // draw regions
     if(window.lastRegions){
