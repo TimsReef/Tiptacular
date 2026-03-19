@@ -630,75 +630,109 @@ function scanLoop(){
  const rect=detectReceipt();
  if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
 
- // draw dynamic detection rectangle like phone face detection
+ // draw receipt box
  ctx.strokeStyle = stableFrames>5 ? "#00ff9c" : "rgba(255,255,255,.7)";
  ctx.lineWidth=4;
  if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); }
 
- // draw quad corners if available
+ // draw quad
  if(detectedQuad){
   ctx.fillStyle="#00ff9c";
   [detectedQuad.tl, detectedQuad.tr, detectedQuad.br, detectedQuad.bl].forEach(p=>{
-   ctx.beginPath();
-   ctx.arc(p.x,p.y,6,0,Math.PI*2);
-   ctx.fill();
+   ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fill();
   });
  }
 
- // draw text regions (debug overlay)
- if(!frozen && window.lastRegions){
-  ctx.strokeStyle = "rgba(0,150,255,0.8)";
-  ctx.lineWidth = 2;
-  
-  window.lastRegions.forEach(r=>{
-   ctx.strokeRect(r.x, r.y, r.w, r.h);
-  });
+ // =============================
+ // REAL-TIME TEXT REGION + OCR
+ // =============================
+ let liveTotal=null;
+ let confidence=0;
+
+ if(cvReady && detectedQuad){
+  const warped = warpReceipt();
+  if(warped){
+   const regions = extractTextRegions(warped);
+
+   if(regions && regions.length){
+    // lightweight OCR sampling (first few regions only for speed)
+    const sample = regions.slice(-3);
+
+    sample.forEach(async (c,i)=>{
+     const base64=c.toDataURL("image/jpeg",0.7);
+     const text=await runNativeOCR(base64);
+
+     if(text){
+      const parsed=parseReceipt(text);
+      if(parsed.total){
+       liveTotal=parsed.total;
+       confidence=Math.min(1, confidence+0.2);
+      }
+     }
+    });
+
+    // draw regions
+    if(window.lastRegions){
+     ctx.strokeStyle="rgba(0,150,255,0.7)";
+     ctx.lineWidth=2;
+     window.lastRegions.forEach(r=>{
+      ctx.strokeRect(r.x,r.y,r.w,r.h);
+     });
+    }
+   }
+  }
  }
-  
- // HUD
+
+ // =============================
+ // TOTAL HIGHLIGHT
+ // =============================
+ if(liveTotal){
+  ctx.fillStyle="rgba(0,255,156,0.2)";
+  ctx.fillRect(20,canvasEl.height-120,260,80);
+
+  ctx.fillStyle="#00ff9c";
+  ctx.font="18px monospace";
+  ctx.fillText("TOTAL: $"+liveTotal.toFixed(2),30,canvasEl.height-80);
+ }
+
+ // =============================
+ // CONFIDENCE HUD
+ // =============================
  ctx.fillStyle="rgba(0,0,0,.55)";
- ctx.fillRect(12,12,220,70);
+ ctx.fillRect(12,12,260,90);
  ctx.fillStyle="#00ff9c";
  ctx.font="14px monospace";
- ctx.fillText("Receipt Detection",22,34);
- ctx.fillText("Edges Active",22,48);
- ctx.fillText("Stability: "+stableFrames,22,56);
+ ctx.fillText("Receipt Detection",22,30);
+ ctx.fillText("Stability: "+stableFrames,22,48);
+ ctx.fillText("Confidence: "+Math.round(confidence*100)+"%",22,66);
 
- // freeze frame once detection stabilizes
- if(stableFrames>18 && !frozen){
-    frozen = true;
-    scannerActive = false;
-    
-    // freeze frame
-    ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
-    videoEl.pause();
-    
-    // perspective correction
-    const warped = warpReceipt();
+ // =============================
+ // AUTO CAPTURE
+ // =============================
+ if(stableFrames>18 && !frozen && confidence>0.5){
+  frozen=true;
+  scannerActive=false;
 
-    if(warped){
-     // show corrected image
-     ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
-     ctx.drawImage(warped,0,0,canvasEl.width,canvasEl.height);
+  ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
+  videoEl.pause();
 
-     // NEW: detect text regions first
-     const regions = extractTextRegions(warped);
+  const warped=warpReceipt();
+  if(warped){
+   ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
+   ctx.drawImage(warped,0,0,canvasEl.width,canvasEl.height);
 
-     if(regions && regions.length){
-       runOCR(regions);
-     }else{
-       runOCR(warped);
-     }
-    }
-    }
+   const regions=extractTextRegions(warped);
+   if(regions && regions.length){ runOCR(regions); }
+   else{ runOCR(warped); }
+  }
 
-    ctx.fillStyle="rgba(0,0,0,.65)";
-    ctx.fillRect(12,12,260,70);
-    ctx.fillStyle="#00ff9c";
-    ctx.fillText("Receipt Scanned",22,36);
-    ctx.fillText("Running OCR...",22,58);
+  ctx.fillStyle="rgba(0,0,0,.65)";
+  ctx.fillRect(12,12,260,70);
+  ctx.fillStyle="#00ff9c";
+  ctx.fillText("Captured",22,36);
+  ctx.fillText("Running OCR...",22,56);
 
-    return;
+  return;
  }
 
  scanLoopId=requestAnimationFrame(scanLoop);
