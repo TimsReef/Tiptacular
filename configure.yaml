@@ -1,3 +1,7 @@
+vars:
+  GIT_BUILD_NUMBER:
+    default: 1.0.0.0
+
 platforms:
   ios:
     targets:
@@ -6,6 +10,10 @@ platforms:
           - entries:
               - NSCameraUsageDescription: "This app needs access to the camera to take photos."
               - NSPhotoLibraryUsageDescription: "This app needs access to photos."
+    version: $GITHUB_BUILD_NUMBER
+    targets:
+      App:
+        buildNumber: $GITHUB_BUILD_NUMBER
   android:
     manifest:
       - file: AndroidManifest.xml
@@ -15,3 +23,6 @@ platforms:
             <uses-permission android:name="android.permission.CAMERA" />
             <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
           </manifest>
+    versionName: $GIT_BUILD_NUMBER
+    versionCode: $GIT_BUILD_NUMBER
+
