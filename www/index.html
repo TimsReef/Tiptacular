@@ -207,7 +207,7 @@ let scanLoopId=null;
 function createScannerUI(){
  const overlay=document.createElement("div");
  overlay.id="scannerOverlay";
- overlay.style.cssText="position:fixed;inset:0;background:black;z-index:999";
+ overlay.style.cssText="position:fixed;inset:0;background:black;z-index:3";
 
  videoEl=document.createElement("video");
  videoEl.autoplay=true;
@@ -627,6 +627,9 @@ async function scanLoop(){
 
  ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
  ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
+
+ctx.strokeStyle = "red";
+ctx.strokeRect(50,50,200,200);
 
  const rect=detectReceipt();
  if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
