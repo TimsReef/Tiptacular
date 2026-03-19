@@ -11,8 +11,11 @@ jobs:
       contents: write  # Required to create/update releases
       packages: write
     steps:
-      - name: Set BUILD_NUMBER environment variable
-        run: echo "GIT_BUILD_NUMBER=${{ github.run_number }}" >> $GITHUB_ENV
+      - name: Set build number environment variable
+        run: |
+          # Extract version from package.json
+          VERSION=$(jq -r '.version' package.json)
+          echo "GIT_BUILD_NUMBER=${{ format('{0}.{1}', VERSION, github.run_number) }} >> $GITHUB_ENV
 
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -62,8 +65,7 @@ jobs:
       - name: Prepare Android Logs
         if: always()
         run: |
-          VERSION=$(jq -r '.version' package.json)
-          LOG_NAME="android-build-v${VERSION}-logs.txt"
+          LOG_NAME="android-build-v${GIT_BUILD_NUMBER}-logs.txt"
           mv android_build.log "$LOG_NAME"
           echo "ANDROID_LOG=$LOG_NAME" >> $GITHUB_ENV
 
@@ -71,11 +73,10 @@ jobs:
         id: rename_apk
         if: steps.android_build.outcome == 'success'
         run: |
-          # 1. Extract app name and version from package.json
+          # 1. Extract app name from package.json
           # tr -dc '[:alnum:]' removes spaces and special characters for a safe filename
           APP_NAME=$(jq -r '.name' package.json | tr -dc '[:alnum:]\n\r')
-          VERSION=$(jq -r '.version' package.json)
-          NEW_FILENAME="${APP_NAME}-v${VERSION}.apk"
+          NEW_FILENAME="${APP_NAME}-v${GIT_BUILD_NUMBER}.apk"
 
           # 2. Find the generated APK (handles name variations like 'app-release-unsigned.apk')
           ORIGINAL_APK=$(ls android/app/build/outputs/apk/debug/*.apk | head -n 1)
