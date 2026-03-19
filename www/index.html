@@ -207,21 +207,21 @@ let scanLoopId=null;
 function createScannerUI(){
  const overlay=document.createElement("div");
  overlay.id="scannerOverlay";
- overlay.style.cssText="position:fixed;inset:0;background:black;z-index:888";
+ overlay.style.cssText="position:fixed;inset:0;background:black;z-index:9999";
 
  videoEl=document.createElement("video");
  videoEl.autoplay=true;
  videoEl.playsInline=true;
  videoEl.muted=true; // prevents mobile play button overlay
  videoEl.controls=false;
- videoEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2";
+ videoEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1";
 
  canvasEl=document.createElement("canvas");
- canvasEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none";
+ canvasEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none";
 
  const close=document.createElement("button");
  close.textContent="✕";
- close.style.cssText="position:absolute;top:20px;right:20px;font-size:24px;border:none;background:rgba(0,0,0,.6);color:white;border-radius:10px;width:40px;height:40px;z-index:999";
+ close.style.cssText="position:absolute;top:20px;right:20px;font-size:24px;border:none;background:rgba(0,0,0,.6);color:white;border-radius:10px;width:40px;height:40px";
  close.onclick=stopScanner;
 
  overlay.appendChild(videoEl);
@@ -618,9 +618,12 @@ async function runNativeOCR(base64Image){
   return "";
  }
 }
-  
+
 async function scanLoop(){
  if(!scannerActive) return;
+
+ const scaleX = canvasEl.clientWidth / canvasEl.width;
+ const scaleY = canvasEl.clientHeight / canvasEl.height;
 
  ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
  ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
@@ -631,13 +634,13 @@ async function scanLoop(){
  // draw receipt box
  ctx.strokeStyle = stableFrames>5 ? "#00ff9c" : "rgba(255,255,255,.7)";
  ctx.lineWidth=4;
- if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x,rect.y,rect.width,rect.height); }
+ if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x*scaleX,rect.y*scaleY,rect.width*scaleX,rect.height*scaleY); }
 
  // draw quad
  if(detectedQuad){
   ctx.fillStyle="#00ff9c";
   [detectedQuad.tl, detectedQuad.tr, detectedQuad.br, detectedQuad.bl].forEach(p=>{
-   ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2); ctx.fill();
+   ctx.beginPath(); ctx.arc(p.x*scaleX,p.y*scaleY,6,0,Math.PI*2); ctx.fill();
   });
  }
 
@@ -674,7 +677,7 @@ async function scanLoop(){
      ctx.strokeStyle="rgba(0,150,255,0.7)";
      ctx.lineWidth=2;
      window.lastRegions.forEach(r=>{
-      ctx.strokeRect(r.x,r.y,r.w,r.h);
+      ctx.strokeRect(r.x*scaleX,r.y*scaleY,r.w*scaleX,r.h*scaleY);
      });
     }
    }
