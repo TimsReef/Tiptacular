@@ -235,6 +235,9 @@ function createScannerUI(){
 
 async function startScanner(){
  if(scannerActive) return;
+
+ logScan("start_scanner");
+
  scannerActive=true;
  frozen=false;
  stableFrames=0;
@@ -257,6 +260,8 @@ async function startScanner(){
 function stopScanner(){
  scannerActive=false;
 
+ logScan("stop_scanner");
+
  if(scanLoopId) cancelAnimationFrame(scanLoopId);
 
  if(videoEl && videoEl.srcObject){
@@ -278,22 +283,24 @@ let detectedQuad=null;
 let cvReady=false;
 
 // load OpenCV
-(function loadOpenCV(){
- if(window.cv){ cvReady=true; return; }
- const s=document.createElement('script');
- s.src='https://docs.opencv.org/4.x/opencv.js';
- s.onload=()=>{
-  cv['onRuntimeInitialized']=()=>{
-   cvReady=true;
-   console.log('OpenCV ready');
-  };
- };
- document.body.appendChild(s);
-})();
+//(function loadOpenCV(){
+// if(window.cv){ cvReady=true; return; }
+// const s=document.createElement('script');
+// s.src='https://docs.opencv.org/4.x/opencv.js';
+// s.onload=()=>{
+//  cv['onRuntimeInitialized']=()=>{
+//   cvReady=true;
+//   console.log('OpenCV ready');
+//  };
+// };
+// document.body.appendChild(s);
+//})();
 
   
 function detectReceipt(){
  if(!cvReady) return detectedRect;
+
+ logScan("detect_receipt");
 
  const src=cv.imread(canvasEl);
  const gray=new cv.Mat();
@@ -377,6 +384,8 @@ function detectReceipt(){
 function warpReceipt(){
  if(!cvReady || !detectedQuad) return null;
 
+ logScan("warp_receipt");
+
  const src = cv.imread(canvasEl);
  const dsize = new cv.Size(600, 800);
 
@@ -412,6 +421,8 @@ function warpReceipt(){
 // =============================
 function extractTextRegions(canvas){
  if(!cvReady) return [];
+
+ logScan("extract_text_regions");
 
  const src = cv.imread(canvas);
  const gray = new cv.Mat();
@@ -469,6 +480,8 @@ function extractTextRegions(canvas){
 async function runOCR(input){
  if(!input) return;
 
+ logScan("run_ocr");
+
  const inputs = Array.isArray(input) ? input : [input];
  let combinedText = "";
 
@@ -498,7 +511,10 @@ async function runOCR(input){
   suggestTip(parsed.total);
  }
 }
+
 function parseReceipt(text){
+ logScan("parse_receipt");
+
  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
 
  let bestTotal = null;
@@ -592,6 +608,8 @@ function parseReceipt(text){
 function suggestTip(total){
  if(!total) return;
 
+ logScan("sugest_tip");
+
  if(total < 20){
   setTip(20);   // small bills → higher %
  }else if(total < 100){
@@ -603,9 +621,11 @@ function suggestTip(total){
 
 async function runNativeOCR(base64Image){
  if(!window.Capacitor || !Capacitor.Plugins){
-  console.warn("ImageToText not available (web preview)");
+  logScan("ImageToText not available (Capacitor & PlugIns)");
   return "";
  }
+
+ logScan("run_native_ocr");
 
  try{
   const result = await Capacitor.Plugins.ImageToText.recognize({
@@ -764,6 +784,8 @@ applyTheme();
 update();
 </script>
 
+<script src="./log.js"></script>
+<script src="./about.js"></script>
 <script type="module" src="/js/bundle.js"></script>
 </body>
 </html>
