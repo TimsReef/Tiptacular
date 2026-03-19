@@ -18,7 +18,7 @@ jobs:
         run: |
           # Extract version from package.json
           VERSION=$(jq -r '.version' package.json)
-          echo "GIT_BUILD_NUMBER=${{ format('{0}.{1}', ${VERSION}, github.run_number) }}" >> $GITHUB_ENV
+          echo "GIT_BUILD_NUMBER=${VERSION}.${{ github.run_number }}" >> $GITHUB_ENV
 
       - name: Setup Node.js
         uses: actions/setup-node@v4.0.2
