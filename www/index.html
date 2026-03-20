@@ -644,6 +644,8 @@ async function runNativeOCR(base64Image){
 async function scanLoop(){
  if(!scannerActive) return;
 
+ logScan("scan_loop", stableFrames);
+
  const scaleX = canvasEl.clientWidth / canvasEl.width;
  const scaleY = canvasEl.clientHeight / canvasEl.height;
 
