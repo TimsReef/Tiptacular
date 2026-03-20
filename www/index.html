@@ -147,7 +147,10 @@ function backspace(){
  update();
 }
 
-function clearInput(){inputRaw="";update()}
+function clearInput(){
+  inputRaw="";
+  update()
+}
 
 function changePeople(v){people=Math.max(1,people+v);peopleDisplay.innerText=people;update()}
 function changeTip(v){tipPercent=Math.max(0,tipPercent+v);tipPercentDisplay.innerText=tipPercent+"%";update()}
@@ -280,7 +283,6 @@ let stableFrames=0;
 let frozen=false;
 let detectedRect=null;
 let detectedQuad=null;
-let cvReady=false;
 
 // load OpenCV
 //(function loadOpenCV(){
@@ -634,7 +636,7 @@ async function runNativeOCR(base64Image){
 
   return result?.text || "";
  }catch(e){
-  console.error("ImageToText OCR failed", e);
+  logScan("ImageToText OCR failed", e);
   return "";
  }
 }
