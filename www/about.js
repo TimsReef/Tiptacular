@@ -10,7 +10,7 @@ let debugMode=false;
 
 async function openAbout(){
  if(window.Capacitor) {
-   const info = await Capacitor.App.getInfo();
+   const info = await window.Capacitor.App.getInfo();
    APP_VERSION = info.version;
  }
  const modal=document.createElement('div');
