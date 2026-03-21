@@ -8,13 +8,11 @@ const APP_NAME="Tiptacular";
 let aboutTapTimes=[];
 let debugMode=false;
 
-const getAppVersion = async () => {
-  const info = await App.getInfo();
-  return `v${info.version}`;
-};
-
 async function openAbout(){
- APP_VERSION = await getAppVersion();
+ if(window.Capacitor) {
+   const info = await App.getInfo();
+   APP_VERSION = info.version;
+ }
  const modal=document.createElement('div');
  modal.id='aboutModal';
  modal.style.position='fixed';
