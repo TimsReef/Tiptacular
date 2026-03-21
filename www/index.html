@@ -208,6 +208,7 @@ let ctx=null;
 let scanLoopId=null;
 
 function createScannerUI(){
+ logScan("createScannerUI);
  const overlay=document.createElement("div");
  overlay.id="scannerOverlay";
  overlay.style.cssText="position:fixed;inset:0;background:black;z-index:3";
@@ -234,6 +235,7 @@ function createScannerUI(){
  document.body.appendChild(overlay);
 
  ctx=canvasEl.getContext("2d");
+ logScan("finish creatinng scanner ui");
 }
 
 async function startScanner(){
@@ -252,10 +254,12 @@ async function startScanner(){
 
  // ensure the preview starts immediately (prevents play icon flash)
  await videoEl.play().catch(()=>{});
+  logScan("preview_play");
 
  videoEl.onloadedmetadata=()=>{
   canvasEl.width=videoEl.videoWidth;
   canvasEl.height=videoEl.videoHeight;
+  logScan("Onloadedmetadata");
   requestAnimationFrame(scanLoop);
  };
 }
