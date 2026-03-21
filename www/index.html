@@ -189,7 +189,26 @@ function toggleSound(){
  document.getElementById("soundBtn").innerText=soundEnabled?"🔊":"🔇";
 }
 
-// swipe clear
+// -----------------------------
+// Pointerdown sound trigger
+// -----------------------------
+
+app.addEventListener('pointerdown',e=>{
+
+ const btn=e.target.closest('button');
+ if(!btn) return;
+
+ if(!soundEnabled) return;
+
+ if(!audioCtx) initAudio();
+
+ try{playClick()}catch(err){}
+
+});
+
+// -----------------------------
+// Swipe Clear
+// -----------------------------
 let startX=null;
 document.getElementById("app").addEventListener("touchstart",e=>{startX=e.touches[0].clientX});
 document.getElementById("app").addEventListener("touchend",e=>{
@@ -793,6 +812,7 @@ update();
 </script>
 
 <script src="./log.js"></script>
+<script src="./sound.js"></script>
 <script src="./about.js"></script>
 <script type="module" src="/js/bundle.js"></script>
 </body>
