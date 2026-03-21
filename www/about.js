@@ -2,13 +2,19 @@
 // About / Debug Screen
 // -----------------------------
 
-const APP_VERSION="1.0.0";
-const APP_NAME="Tip Calculator";
+let APP_VERSION="1.0.0"; //default
+const APP_NAME="Tiptacular";
 
 let aboutTapTimes=[];
 let debugMode=false;
 
-function openAbout(){
+const getAppVersion = async () => {
+  const info = await App.getInfo();
+  return `v${info.version}`;
+};
+
+async function openAbout(){
+ APP_VERSION = await getAppVersion();
  const modal=document.createElement('div');
  modal.id='aboutModal';
  modal.style.position='fixed';
