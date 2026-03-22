@@ -236,8 +236,8 @@ function createScannerUI(){
  videoEl.autoplay=true;
  videoEl.playsInline=true;
  videoEl.muted=true; // prevents mobile play button overlay
- videoEl.controls=false;
- videoEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1";
+ videoEl.controls=false;  videoEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1";
+ videoEl.preload = "metadata";
 
  canvasEl=document.createElement("canvas");
  canvasEl.style.cssText="position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none";
