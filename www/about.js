@@ -9,9 +9,13 @@ let aboutTapTimes=[];
 let debugMode=false;
 
 async function openAbout(){
+ try {
  if(window.Capacitor) {
    const info = await App.getInfo();
    APP_VERSION = info.version;
+ }
+ } catch(e) {
+   logScan(e);
  }
  const modal=document.createElement('div');
  modal.id='aboutModal';
