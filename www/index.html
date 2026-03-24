@@ -174,9 +174,23 @@ function buildKeypad(){
  });
 }
 
+// -----------------------------
+// Theme
+// -----------------------------
+
+const savedTheme=localStorage.getItem('tipcalc-theme');
+if(savedTheme) themeMode=savedTheme;
+
 function applyTheme(){
- document.body.classList.remove("transparent","light","dark");
+ document.body.classList.remove('transparent','light','dark');
  document.body.classList.add(themeMode);
+
+ const btn=document.getElementById('themeBtn');
+ if(themeMode==='transparent') btn.innerText='🫧';
+ if(themeMode==='light') btn.innerText='☀️';
+ if(themeMode==='dark') btn.innerText='🌙';
+
+ localStorage.setItem('tipcalc-theme',themeMode);
 }
 
 function toggleTheme(){
