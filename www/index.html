@@ -353,9 +353,12 @@ let detectedQuad=null;
 
   
 function detectReceipt(){
- if(!cvReady) return detectedRect;
-
  logScan("detect_receipt");
+
+ if(!cvReady) {
+   logScan("detect_receipt", "detectedRect", detectedRect);
+   return detectedRect;
+ }
 
  const src=cv.imread(canvasEl);
  const gray=new cv.Mat();
@@ -384,6 +387,7 @@ function detectReceipt(){
    if(area>maxArea){
     maxArea=area;
     bestQuad=approx;
+    logScan("detect_receipt", "bestQuad", bestQuad);
    }
   }
  }
@@ -391,6 +395,7 @@ function detectReceipt(){
  if(!bestQuad){
   stableFrames=Math.max(0,stableFrames-1);
   src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
+  logScan("detect_receipt", "!bestQuad", detectedRect);
   return detectedRect;
  }
 
@@ -437,9 +442,12 @@ function detectReceipt(){
 }
   
 function warpReceipt(){
- if(!cvReady || !detectedQuad) return null;
-
  logScan("warp_receipt");
+
+ if(!cvReady || !detectedQuad) {
+   logScan("warp_receipt", "error", "notready");
+   return null;
+ }
 
  const src = cv.imread(canvasEl);
  const dsize = new cv.Size(600, 800);
@@ -710,6 +718,8 @@ ctx.strokeRect(50,50,200,200);
 
  const rect=detectReceipt();
  if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
+
+ logScan("ScanLoopdetectReceipt", rect);
 
  // draw receipt box
  ctx.strokeStyle = stableFrames>5 ? "#00ff9c" : "rgba(255,255,255,.7)";

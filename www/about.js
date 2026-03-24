@@ -11,7 +11,7 @@ let debugMode=false;
 async function openAbout(){
  try {
  if(window.Capacitor) {
-   const info = await App.getInfo();
+   const info = await Capacitor.App.getInfo();
    APP_VERSION = info.version;
  }
  } catch(e) {
@@ -61,8 +61,6 @@ The receipt scanning feature uses experimental computer vision algorithms execut
  const content=document.getElementById('aboutContent');
  content.addEventListener('click',handleAboutTap);
 }
-
-
 
 function closeAbout(){
  const m=document.getElementById('aboutModal');
