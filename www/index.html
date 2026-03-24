@@ -289,12 +289,27 @@ async function startScanner(){
  await videoEl.play().catch(()=>{});
   logScan("preview_play");
 
- videoEl.onloadedmetadata=()=>{
-  canvasEl.width=videoEl.videoWidth;
-  canvasEl.height=videoEl.videoHeight;
-  logScan("Onloadedmetadata");
+ // More reliable start for mobile (Android/iOS)
+ const startScan = () => {
+  logScan("startScan");
+  if(!videoEl.videoWidth || !videoEl.videoHeight) return;
+
+  canvasEl.width = videoEl.videoWidth;
+  canvasEl.height = videoEl.videoHeight;
+
+  console.log("Video ready:", videoEl.videoWidth, videoEl.videoHeight);
+
   requestAnimationFrame(scanLoop);
  };
+
+ // Some devices never fire onloadedmetadata
+ videoEl.onloadedmetadata = startScan;
+ videoEl.onloadeddata = startScan;
+ videoEl.oncanplay = startScan;
+
+ // Fallback safety (critical for Android WebView)
+ setTimeout(startScan, 500);
+
  logScan("finish preview_play");
 }
 
