@@ -444,6 +444,7 @@ function detectReceipt(){
 } catch (e) {
   logScan("detect_receipt", "exception", e);
 }
+ logScan("detect_receipt", "rect", "returning");
  return detectedRect || rect;
 }
   
@@ -711,6 +712,7 @@ async function runNativeOCR(base64Image){
 async function scanLoop(){
  if(!scannerActive) return;
 
+try{
  logScan("scan_loop", "stableFrames", stableFrames);
 
  const scaleX = canvasEl.clientWidth / canvasEl.width;
@@ -829,6 +831,9 @@ async function scanLoop(){
 
   return;
  }
+} catch(e) {
+  logScan("scanLoop", "exception", e);
+}
 
  scanLoopId=requestAnimationFrame(scanLoop);
 }

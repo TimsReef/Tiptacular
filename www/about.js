@@ -11,11 +11,11 @@ let debugMode=false;
 async function openAbout(){
  try {
  if(window.Capacitor) {
-   const info = await Capacitor.App.getInfo();
+   const info = await window.Capacitor.Plugins.App.getInfo();
    APP_VERSION = info.version;
  }
  } catch(e) {
-   logScan(e);
+   logScan("openAbout", "exception", e);
  }
  const modal=document.createElement('div');
  modal.id='aboutModal';
@@ -73,9 +73,12 @@ function handleAboutTap(){
  aboutTapTimes=aboutTapTimes.filter(t=>now-t<5000);
 
  if(aboutTapTimes.length>=5){
-  debugMode=true;
-  logScan("display_debug_logs", "about");
-  showDebugLogs();
+   aboutTapTimes = [];
+   if (!debugMode) {
+     logScan("display_debug_logs", "about");
+     debugMode=true;
+   }
+   showDebugLogs();
  }
 }
 
@@ -102,6 +105,9 @@ function showDebugLogs(){
 
  dbg.innerHTML=`
  <div style="display:flex;gap:8px;margin-bottom:8px">
+  <button id="clearLogsBtn" style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">
+   Clear Logs
+  </button>
   <button id="emailLogsBtn" style="padding:.3rem .6rem;border:none;border-radius:6px;background:var(--button)">
    Email Logs
   </button>
@@ -127,6 +133,9 @@ function showDebugLogs(){
  `;
 
  renderLogTable();
+
+ const btnClearLogs=document.getElementById("clearLogsBtn");
+ if(btnClearLogs)btnClearLogs.onclick=clearLogs;
 
  const btn=document.getElementById("toggleCvDebugBtn");
  if(btn)btn.onclick=toggleCvDebug;
@@ -159,6 +168,11 @@ function renderLogTable(){
 
   tbody.appendChild(tr);
  });
+}
+
+function clearLogs() {
+  logClear();
+  showDebugLogs();
 }
 
 function emailLogs(){

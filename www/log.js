@@ -4,7 +4,7 @@ let cvDebugEnabled=false;
 // Receipt Scanner Logging
 // -----------------------------
 
-const scannerLogs=[];
+let scannerLogs=[];
 
 // Structured scanner telemetry logger
 
@@ -16,4 +16,9 @@ function logScan(step,status="info",metrics={}){
   metrics:metrics
  };
  scannerLogs.push(entry);
+}
+
+function logClear() {
+  scannerLogs=[];
+  logScan("Logs Cleared");
 }
