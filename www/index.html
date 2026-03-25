@@ -373,6 +373,8 @@ function detectReceipt(){
 
  cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
 
+ logScan("findContours", "contours", contours);
+
  let bestQuad=null;
  let maxArea=0;
 
@@ -391,6 +393,8 @@ function detectReceipt(){
    }
   }
  }
+
+ logScan("detect_receipt", "bestQuad", bestQuad);
 
  if(!bestQuad){
   stableFrames=Math.max(0,stableFrames-1);
@@ -713,10 +717,8 @@ async function scanLoop(){
  ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
  ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
 
-ctx.strokeStyle = "red";
-ctx.strokeRect(50,50,200,200);
-
  const rect=detectReceipt();
+ logScan("scan_loop", "rectangle", rect);
  if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
 
  logScan("ScanLoopdetectReceipt", rect);
