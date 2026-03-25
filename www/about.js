@@ -74,7 +74,7 @@ function handleAboutTap(){
 
  if(aboutTapTimes.length>=5){
   debugMode=true;
-  logScan("display_debug_logs");
+  logScan("display_debug_logs", "about");
   showDebugLogs();
  }
 }
@@ -149,12 +149,13 @@ function renderLogTable(){
  scannerLogs.forEach(l=>{
   const tr=document.createElement('tr');
   const time=new Date(l.t).toLocaleTimeString();
+  let outputMetrics = dataToString(l.metrics);
 
   tr.innerHTML=`
    <td>${time}</td>
    <td>${l.step||''}</td>
    <td>${l.status||''}</td>
-   <td>${l.metrics ?? ''}</td>`;
+   <td>${outputMetrics}</td>`;
 
   tbody.appendChild(tr);
  });
