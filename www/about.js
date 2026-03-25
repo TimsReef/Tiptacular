@@ -38,7 +38,7 @@ async function openAbout(){
  <div style="font-size:14px;margin-bottom:8px">Version ${APP_VERSION}</div>
  <div style="font-size:12px;margin-bottom:14px">© ${new Date().getFullYear()} GizSoft</div>
  <div id="tosBlock" style="font-size:13px;line-height:1.4;color:var(--muted);overflow:auto;max-height:40vh">
- TIP CALCULATOR SOFTWARE LICENSE AGREEMENT
+ TIPTACULAR SOFTWARE LICENSE AGREEMENT
 
 Copyright (c) 2026 GizSoft. All rights reserved.
 
