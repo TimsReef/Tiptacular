@@ -1,6 +1,7 @@
 // -----------------------------
 // About / Debug Screen
 // -----------------------------
+import { App } from '@capacitor/app';
 
 let APP_VERSION="1.0.0"; //default
 const APP_NAME="Tiptacular";
@@ -118,7 +119,7 @@ function showDebugLogs(){
      <th data-col="t">Time</th>
      <th data-col="step">Step</th>
      <th data-col="status">Status</th>
-     <th data-col="frame">Frame</th>
+     <th data-col="metrics">Metrics</th>
     </tr>
    </thead>
    <tbody></tbody>
@@ -154,7 +155,7 @@ function renderLogTable(){
    <td>${time}</td>
    <td>${l.step||''}</td>
    <td>${l.status||''}</td>
-   <td>${l.frame ?? ''}</td>`;
+   <td>${l.metrics ?? ''}</td>`;
 
   tbody.appendChild(tr);
  });
@@ -163,7 +164,7 @@ function renderLogTable(){
 function emailLogs(){
  try{
   const body=encodeURIComponent(JSON.stringify(scannerLogs,null,2));
-  const subject=encodeURIComponent('Tip Calculator Scanner Logs');
+  const subject=encodeURIComponent('Tiptacular Scanner Logs');
   window.location.href=`mailto:?subject=${subject}&body=${body}`;
  }catch(e){console.warn('email logs failed',e)}
 }

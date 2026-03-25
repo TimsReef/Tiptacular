@@ -373,7 +373,7 @@ function detectReceipt(){
 
  cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
 
- logScan("findContours", "contours", contours);
+ logScan("detect_receipt", "findContours", contours);
 
  let bestQuad=null;
  let maxArea=0;
@@ -701,7 +701,7 @@ async function runNativeOCR(base64Image){
 
   return result?.text || "";
  }catch(e){
-  logScan("ImageToText OCR failed", e);
+  logScan("ImageToText OCR failed", "Exception", e);
   return "";
  }
 }
@@ -709,7 +709,7 @@ async function runNativeOCR(base64Image){
 async function scanLoop(){
  if(!scannerActive) return;
 
- logScan("scan_loop", stableFrames);
+ logScan("scan_loop", "stableFrames", stableFrames);
 
  const scaleX = canvasEl.clientWidth / canvasEl.width;
  const scaleY = canvasEl.clientHeight / canvasEl.height;
@@ -721,7 +721,7 @@ async function scanLoop(){
  logScan("scan_loop", "rectangle", rect);
  if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
 
- logScan("ScanLoopdetectReceipt", rect);
+ logScan("scan_loop", "after:detectReceipt", rect);
 
  // draw receipt box
  ctx.strokeStyle = stableFrames>5 ? "#00ff9c" : "rgba(255,255,255,.7)";

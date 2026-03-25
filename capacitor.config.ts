@@ -1,5 +1,4 @@
 import type { CapacitorConfig } from '@capacitor/cli';
-import { App } from '@capacitor/app';
 
 const config: CapacitorConfig = {
   appId: 'com.tiptacular.app',
