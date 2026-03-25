@@ -297,7 +297,7 @@ async function startScanner(){
   canvasEl.width = videoEl.videoWidth;
   canvasEl.height = videoEl.videoHeight;
 
-  console.log("Video ready:", videoEl.videoWidth, videoEl.videoHeight);
+  logScan("startScanner", "Video Ready", videoEl.videoWidth+videoEl.videoHeight);
 
   requestAnimationFrame(scanLoop);
  };
@@ -442,7 +442,7 @@ function detectReceipt(){
 
  src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
 } catch (e) {
-  logScan("detect_receipt", "exception", e);
+  logScan("detect_receipt", "exception", e.toString());
 }
  logScan("detect_receipt", "rect", "returning");
  return detectedRect || rect;
@@ -567,7 +567,7 @@ async function runOCR(input){
     combinedText += "\n" + text;
    }
   }catch(e){
-   console.error("ML Kit OCR failed", e);
+   console.error("run_ocr", "ML Kit OCR failed", e.toString());
   }
  }
 
@@ -704,7 +704,7 @@ async function runNativeOCR(base64Image){
 
   return result?.text || "";
  }catch(e){
-  logScan("ImageToText OCR failed", "Exception", e);
+  logScan("ImageToText OCR failed", "Exception", e.toString());
   return "";
  }
 }
@@ -832,7 +832,7 @@ try{
   return;
  }
 } catch(e) {
-  logScan("scanLoop", "exception", e);
+  logScan("scanLoop", "exception", e.toString());
 }
 
  scanLoopId=requestAnimationFrame(scanLoop);
@@ -860,8 +860,8 @@ applyTheme();
 update();
 </script>
 
-<script type="module" src="/js/capacitor.bundle.js"></script>
-<script type="module" src="/js/openvc.bundle.js"></script>
+<script type="module" src="./js/capacitor.bundle.js"></script>
+<script type="module" src="./js/openvc.bundle.js"></script>
 <script src="./utils.js"></script>
 <script src="./log.js"></script>
 <script src="./sound.js"></script>
