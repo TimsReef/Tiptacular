@@ -1,7 +1,6 @@
 // -----------------------------
 // About / Debug Screen
 // -----------------------------
-import { App } from '@capacitor/app';
 
 let APP_VERSION="1.0.0"; //default
 const APP_NAME="Tiptacular";

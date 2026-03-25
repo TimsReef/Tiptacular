@@ -359,7 +359,7 @@ function detectReceipt(){
    logScan("detect_receipt", "detectedRect", detectedRect);
    return detectedRect;
  }
-
+ try {
  const src=cv.imread(canvasEl);
  const gray=new cv.Mat();
  const blurred=new cv.Mat();
@@ -441,7 +441,9 @@ function detectReceipt(){
  }
 
  src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
-
+} catch (e) {
+  logScan("detect_receipt", "exception", e);
+}
  return detectedRect || rect;
 }
   
