@@ -2,21 +2,15 @@
 // About / Debug Screen
 // -----------------------------
 
-let APP_VERSION="1.0.0"; //default
 const APP_NAME="Tiptacular";
-
+let APP_VERSION="";
 let aboutTapTimes=[];
 let debugMode=false;
 
 async function openAbout(){
- try {
- if(window.Capacitor) {
-   const info = await window.Capacitor.Plugins.App.getInfo();
-   APP_VERSION = info.version;
- }
- } catch(e) {
-   logScan("openAbout", "exception", e);
- }
+
+ APP_VERSION = await getAppVersion();
+
  const modal=document.createElement('div');
  modal.id='aboutModal';
  modal.style.position='fixed';
