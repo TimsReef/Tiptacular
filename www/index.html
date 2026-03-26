@@ -331,25 +331,21 @@ function stopScanner(){
 // =============================
 // OpenCV Receipt Detection
 // =============================
-
+let cvReady=false;
 let stableFrames=0;
 let frozen=false;
 let detectedRect=null;
 let detectedQuad=null;
 
 // load OpenCV
-//(function loadOpenCV(){
-// if(window.cv){ cvReady=true; return; }
-// const s=document.createElement('script');
-// s.src='https://docs.opencv.org/4.x/opencv.js';
-// s.onload=()=>{
-//  cv['onRuntimeInitialized']=()=>{
-//   cvReady=true;
-//   console.log('OpenCV ready');
-//  };
-// };
-// document.body.appendChild(s);
-//})();
+function loadOpenCV(){
+  if(window.cv){ cvReady=true; return; }
+
+  if(initializeOpenCV()) {
+    cvReady=true;
+  }
+  logScan("loadOpenCV", "ready", cvReady);
+}
 
   
 function detectReceipt(){
@@ -858,6 +854,7 @@ document.getElementById("cameraBtn").onclick=startScanner;
 buildKeypad();
 applyTheme();
 update();
+loadOpenCV();
 </script>
 
 <script type="module" src="./js/capacitor.bundle.js"></script>

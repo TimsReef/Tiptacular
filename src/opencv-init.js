@@ -1,9 +1,17 @@
 import cv from "@techstark/opencv-js"
 
-export let cvReady=false;
-window.cv = cv
-
-// Wait until OpenCV runtime is ready
-cv.onRuntimeInitialized = () => {
-  cvReady=true;
+// Initialize OpenCV and return the cv object
+export async function initializeOpenCV() {
+  let cvReady;
+  if (cv instanceof Promise) {
+    cvReady = await cv;
+  } else {
+    // Fallback for older versions or specific configurations
+    await new Promise((resolve) => {
+      cv.onRuntimeInitialized = () => resolve();
+    });
+    cvReady = cv;
+    window.cv = cv;
+  }
+  return cvReady;
 }
