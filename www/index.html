@@ -274,6 +274,8 @@ function createScannerUI(){
 async function startScanner(){
  if(scannerActive) return;
 
+ loadOpenCV();
+
  logScan("start_scanner");
 
  scannerActive=true;
@@ -858,7 +860,6 @@ document.getElementById("cameraBtn").onclick=startScanner;
 buildKeypad();
 applyTheme();
 update();
-loadOpenCV();
 </script>
 
 <script type="module" src="./js/capacitor.bundle.js"></script>
