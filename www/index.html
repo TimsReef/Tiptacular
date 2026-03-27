@@ -341,16 +341,20 @@ let detectedQuad=null;
 
 // load OpenCV
 function loadOpenCV(){
+  try {
   if(window.cv) { 
     cvReady=true;
     logScan("loadOpenCV", "window.cv", cvReady);
     return;
- }
+  }
 
   if(initializeOpenCV()) {
     cvReady=true;
   }
   logScan("loadOpenCV", "initializeOpenCV", cvReady);
+  } catch(e) {
+    logScan("loadOpenCV", "exception", e.toString());
+  }
 }
 
   
