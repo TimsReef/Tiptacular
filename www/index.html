@@ -348,7 +348,7 @@ function loadOpenCV(){
     return;
   }
 
-  if(initializeOpenCV()) {
+  if(await initializeOpenCV()) {
     cvReady=true;
   }
   logScan("loadOpenCV", "initializeOpenCV", cvReady);
@@ -867,7 +867,7 @@ update();
 </script>
 
 <script type="module" src="./js/capacitor.bundle.js"></script>
-<script type="module" src="./js/openvc.bundle.js"></script>
+<script type="module" src="./js/opencv.bundle.js"></script>
 <script src="./capacitorhelpers.js"></script>
 <script src="./utils.js"></script>
 <script src="./log.js"></script>
