@@ -152,7 +152,7 @@ function renderLogTable(){
  scannerLogs.forEach(l=>{
   const tr=document.createElement('tr');
   const time=new Date(l.t).toLocaleTimeString();
-  let outputMetrics = l.metrics	;
+  let outputMetrics = l.metrics;
 
   tr.innerHTML=`
    <td>${time}</td>

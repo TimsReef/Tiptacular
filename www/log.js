@@ -13,7 +13,7 @@ function logScan(step,status="info",metrics={}){
   t:Date.now(),
   step:String(step),
   status:String(status),
-  metrics:dataToString(metrics)
+  metrics:String(dataToString(metrics))
  };
  scannerLogs.push(entry);
 }
