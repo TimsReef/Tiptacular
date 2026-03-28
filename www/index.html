@@ -435,6 +435,9 @@ function detectReceipt(){
   stableFrames++;
   detectedRect=rect;
   detectedQuad={tl,tr,br,bl};
+  
+  logScan("detect_receipt", "detectedQuad", detectedQuad);
+
  }else{
   stableFrames=Math.max(0,stableFrames-1);
  }
