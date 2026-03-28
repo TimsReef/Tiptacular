@@ -299,7 +299,7 @@ async function startScanner(){
   canvasEl.width = videoEl.videoWidth;
   canvasEl.height = videoEl.videoHeight;
 
-  logScan("startScanner", "Video Ready", videoEl.videoWidth+videoEl.videoHeight);
+  logScan("startScanner", "Video Ready", `${videoEl.videoWidth} x ${videoEl.videoHeight}`);
 
   requestAnimationFrame(scanLoop);
  };
