@@ -345,14 +345,14 @@ function loadOpenCV(){
     if(window.cv) { 
       cvReady=true;
       logScan("loadOpenCV", "window.cv", cvReady);
-      return;
+//      return;
     }
 
-    const c = initializeOpenCV();
-    if(c !== null) {
-      cvReady=true;
-    }
-    logScan("loadOpenCV", "initializeOpenCV", cvReady);
+//    const c = initializeOpenCV();
+//    if(c !== null) {
+//      cvReady=true;
+//    }
+//    logScan("loadOpenCV", "initializeOpenCV", cvReady);
   } catch(e) {
     logScan("loadOpenCV", "exception", e.toString());
   }
