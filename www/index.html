@@ -341,6 +341,20 @@ let detectedQuad=null;
 
 // load OpenCV
 function loadOpenCV(){
+
+// load opencs on pc
+// if(window.cv){ cvReady=true; return; }
+// const s=document.createElement('script');
+// s.src='https://docs.opencv.org/4.x/opencv.js';
+// s.onload=()=>{
+//  cv['onRuntimeInitialized']=()=>{
+//   cvReady=true;
+//   console.log('OpenCV ready');
+//  };
+// };
+// document.body.appendChild(s);
+
+// load opencv on device 
   try {
     if(window.cv) { 
       cvReady=true;
@@ -358,7 +372,7 @@ function detectReceipt(){
    logScan("detect_receipt", "detectedRect", detectedRect);
    return detectedRect;
  }
- try {
+// try {
  const src=cv.imread(canvasEl);
  const gray=new cv.Mat();
  const blurred=new cv.Mat();
@@ -443,10 +457,10 @@ function detectReceipt(){
  }
 
  src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
-} catch (e) {
-  logScan("detect_receipt", "exception", e.toString());
-}
- logScan("detect_receipt", "rect", "returning");
+//} catch (e) {
+//  logScan("detect_receipt", "exception", e.toString());
+//}
+ logScan("detect_receipt", "exiting rect", rect);
  return detectedRect || rect;
 }
   
