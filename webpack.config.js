@@ -3,7 +3,6 @@ const path = require("path");
 module.exports = {
   entry: {
       opencv: "./src/opencv-init.js", // Creates 'opencv.bundle.js' (or as specified below)
-      capacitor: "./src/capacitor-init.js",
   },
 
   output: {
