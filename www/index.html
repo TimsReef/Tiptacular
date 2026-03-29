@@ -375,16 +375,21 @@ function detectReceipt(){
 // try {
  const src=cv.imread(canvasEl);
  const gray=new cv.Mat();
+ const norm=new cv.Mat();
  const blurred=new cv.Mat();
  const edges=new cv.Mat();
  const contours=new cv.MatVector();
  const hierarchy=new cv.Mat();
 
  cv.cvtColor(src,gray,cv.COLOR_RGBA2GRAY);
- cv.GaussianBlur(gray,blurred,new cv.Size(5,5),0);
+
+ // normalize lighting (huge for dark restaurants)
+ cv.equalizeHist(gray, norm);
+
+ cv.GaussianBlur(norm,blurred,new cv.Size(5,5),0);
 
  // better edge detection
- cv.Canny(blurred,edges,50,150);
+ cv.Canny(blurred,edges,30,120);
 
  cv.findContours(edges,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
 
@@ -399,22 +404,55 @@ function detectReceipt(){
   const area=cv.contourArea(cnt);
 
   // ignore tiny contours
-  if(area < imgArea * 0.1) continue;
+  if(area < imgArea * 0.15) continue;
 
   const peri=cv.arcLength(cnt,true);
   const approx=new cv.Mat();
-  cv.approxPolyDP(cnt,approx,0.02*peri,true);
+  cv.approxPolyDP(cnt,approx,0.03*peri,true);
 
-  // must be 4-sided
-  if(approx.rows===4){
-   // ensure convex
-   if(!cv.isContourConvex(approx)) continue;
+  if(approx.rows===4 && cv.isContourConvex(approx)){
 
-   // prefer largest valid quad
-   if(area>maxArea){
-    maxArea=area;
-    bestQuad=approx;
-    logScan("detect_receipt", "bestQuad", bestQuad);
+   // extract points
+   const pts=[];
+   for(let j=0;j<4;j++){
+    pts.push({
+     x:approx.intPtr(j,0)[0],
+     y:approx.intPtr(j,0)[1]
+    });
+   }
+
+   // sort
+   pts.sort((a,b)=>a.y-b.y);
+   const top=pts.slice(0,2).sort((a,b)=>a.x-b.x);
+   const bottom=pts.slice(2,4).sort((a,b)=>a.x-b.x);
+
+   const tl=top[0];
+   const tr=top[1];
+   const bl=bottom[0];
+   const br=bottom[1];
+
+   // 🔥 use true edge lengths (fixes skinny box bug)
+   const widthTop = Math.hypot(tr.x-tl.x, tr.y-tl.y);
+   const widthBottom = Math.hypot(br.x-bl.x, br.y-bl.y);
+   const heightLeft = Math.hypot(bl.x-tl.x, bl.y-tl.y);
+   const heightRight = Math.hypot(br.x-tr.x, br.y-tr.y);
+
+   const width = (widthTop + widthBottom) / 2;
+   const height = (heightLeft + heightRight) / 2;
+
+   const aspect = width / height; // receipt ~0.2–0.7 typically
+
+   // 🔥 reject tall skinny false positives
+   if(aspect < 0.2 || aspect > 1.2) continue;
+
+   const coverage = area / imgArea;
+
+   // scoring (prefer large + good ratio)
+   const score = coverage * (1 - Math.abs(aspect - 0.5));
+
+   if(score > maxScore){
+    maxScore = score;
+    bestQuad = {tl,tr,br,bl,width,height};
    }
   }
  }
@@ -426,43 +464,25 @@ function detectReceipt(){
   return detectedRect;
  }
 
- const pts=[];
- for(let i=0;i<4;i++){
-  pts.push({
-   x:bestQuad.intPtr(i,0)[0],
-   y:bestQuad.intPtr(i,0)[1]
-  });
- }
-
- // sort points (tl,tr,br,bl)
- pts.sort((a,b)=>a.y-b.y);
- const top=pts.slice(0,2).sort((a,b)=>a.x-b.x);
- const bottom=pts.slice(2,4).sort((a,b)=>a.x-b.x);
-
- const tl=top[0];
- const tr=top[1];
- const bl=bottom[0];
- const br=bottom[1];
-
  const rect={
-  x:tl.x,
-  y:tl.y,
-  width:tr.x-tl.x,
-  height:bl.y-tl.y
+  x:bestQuad.tl.x,
+  y:bestQuad.tl.y,
+  width:bestQuad.width,
+  height:bestQuad.height
  };
 
- const coverage = maxArea / imgArea;
+ const coverage = (bestQuad.width * bestQuad.height) / imgArea;
 
- // stricter validation
- if(coverage > 0.25){
+ if(coverage > 0.2){
   stableFrames++;
   detectedRect=rect;
-  detectedQuad={tl,tr,br,bl};
+  detectedQuad=bestQuad;
  }else{
   stableFrames=Math.max(0,stableFrames-1);
  }
 
  src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
+
 //} catch (e) {
 //  logScan("detect_receipt", "exception", e.toString());
 //}
