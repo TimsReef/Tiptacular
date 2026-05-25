@@ -400,11 +400,11 @@ function detectReceipt(){
 
  for(let i=0;i<contours.size();i++){
   const cnt=contours.get(i);
-  logScan("detect_receipt", "findContours", `${i}:${cnt}`);
+  //logScan("detect_receipt", "findContours", `${i}:${cnt}`);
   const area=cv.contourArea(cnt);
 
   // ignore tiny contours
-  if(area < imgArea * 0.15) continue;
+  if(area < imgArea * 0.05) continue;
 
   const peri=cv.arcLength(cnt,true);
   const approx=new cv.Mat();
@@ -452,7 +452,7 @@ function detectReceipt(){
 
    if(score > maxScore){
     maxScore = score;
-    bestQuad = {tl,tr,br,bl,width,height};
+    bestQuad = {tl, tr, br, bl, rectWidth: width, rectHeight: height};
    }
   }
  }
@@ -467,8 +467,8 @@ function detectReceipt(){
  const rect={
   x:bestQuad.tl.x,
   y:bestQuad.tl.y,
-  width:bestQuad.width,
-  height:bestQuad.height
+  width:bestQuad.rectWidth,
+  height:bestQuad.rectHeight
  };
 
  const coverage = (bestQuad.width * bestQuad.height) / imgArea;
@@ -763,7 +763,14 @@ try{
  ctx.clearRect(0,0,canvasEl.width,canvasEl.height);
  ctx.drawImage(videoEl,0,0,canvasEl.width,canvasEl.height);
 
- const rect=detectReceipt();
+ let rect = null;
+
+ try{
+  rect = detectReceipt();
+ } catch(e) {
+   logScan("detectReceipt failed", "exception", e);
+ }
+
  logScan("scan_loop", "rectangle", rect);
  if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
 
