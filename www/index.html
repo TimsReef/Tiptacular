@@ -373,7 +373,15 @@ function detectReceipt(){
    return detectedRect;
  }
 // try {
- const src=cv.imread(canvasEl);
+ const tempCanvas=document.createElement("canvas");
+ tempCanvas.width=videoEl.videoWidth;
+ tempCanvas.height=videoEl.videoHeight;
+
+ const tempCtx=tempCanvas.getContext("2d");
+ tempCtx.drawImage(videoEl,0,0);
+
+ const src=cv.imread(tempCanvas);
+
  const gray=new cv.Mat();
  const norm=new cv.Mat();
  const blurred=new cv.Mat();
@@ -459,7 +467,13 @@ function detectReceipt(){
 
  if(!bestQuad){
   stableFrames=Math.max(0,stableFrames-1);
-  src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
+  src.delete();
+  gray.delete();
+  norm.delete();
+  blurred.delete();
+  edges.delete();
+  contours.delete();
+  hierarchy.delete();
   logScan("detect_receipt", "!bestQuad", detectedRect);
   return detectedRect;
  }
@@ -471,7 +485,7 @@ function detectReceipt(){
   height:bestQuad.rectHeight
  };
 
- const coverage = (bestQuad.width * bestQuad.height) / imgArea;
+const coverage = (bestQuad.rectWidth * bestQuad.rectHeight) / imgArea;
 
  if(coverage > 0.2){
   stableFrames++;
@@ -481,7 +495,13 @@ function detectReceipt(){
   stableFrames=Math.max(0,stableFrames-1);
  }
 
- src.delete();gray.delete();blurred.delete();edges.delete();contours.delete();hierarchy.delete();
+ src.delete();
+ gray.delete();
+ norm.delete();
+ blurred.delete();
+ edges.delete();
+ contours.delete();
+ hierarchy.delete();
 
 //} catch (e) {
 //  logScan("detect_receipt", "exception", e.toString());
@@ -772,14 +792,12 @@ try{
  }
 
  logScan("scan_loop", "rectangle", rect);
- if(!rect){ scanLoopId=requestAnimationFrame(scanLoop); return; }
-
- logScan("scan_loop", "after:detectReceipt", rect);
 
  // draw receipt box
  ctx.strokeStyle = stableFrames>5 ? "#00ff9c" : "rgba(255,255,255,.7)";
  ctx.lineWidth=4;
- if(rect.width>0 && rect.height>0){ ctx.strokeRect(rect.x*scaleX,rect.y*scaleY,rect.width*scaleX,rect.height*scaleY); }
+ if(rect && rect.width>0 && rect.height>0)
+ { ctx.strokeRect(rect.x*scaleX,rect.y*scaleY,rect.width*scaleX,rect.height*scaleY); }
 
  // draw quad
  if(detectedQuad){
