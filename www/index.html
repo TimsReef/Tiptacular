@@ -397,12 +397,21 @@ function detectReceipt(){
  cv.GaussianBlur(norm,blurred,new cv.Size(5,5),0);
 
  // better edge detection
- cv.Canny(blurred,edges,30,120);
+ cv.Canny(blurred, edges, 50, 180);
 
- cv.findContours(edges,contours,hierarchy,cv.RETR_EXTERNAL,cv.CHAIN_APPROX_SIMPLE);
+ // strengthen edges
+ const kernel = cv.getStructuringElement(
+  cv.MORPH_RECT,
+  new cv.Size(3,3)
+ );
+
+ cv.dilate(edges, edges, kernel);
+ kernel.delete();
+
+ cv.findContours(edges,contours,hierarchy,cv.RETR_LIST,cv.CHAIN_APPROX_SIMPLE);
 
  let bestQuad=null;
- let maxArea=0;
+ let maxScore=0;
 
  const imgArea = canvasEl.width * canvasEl.height;
 
@@ -458,10 +467,44 @@ function detectReceipt(){
    // scoring (prefer large + good ratio)
    const score = coverage * (1 - Math.abs(aspect - 0.5));
 
-   if(score > maxScore){
-    maxScore = score;
-    bestQuad = {tl, tr, br, bl, rectWidth: width, rectHeight: height};
-   }
+    // Prefer:
+    // - larger receipts
+    // - centered receipts
+    // - portrait-ish shapes
+    // - stable geometry
+
+    const centerX = canvasEl.width / 2;
+    const centerY = canvasEl.height / 2;
+
+    const rectCenterX = (tl.x + tr.x + bl.x + br.x) / 4;
+    const rectCenterY = (tl.y + tr.y + bl.y + br.y) / 4;
+
+    const dx = Math.abs(rectCenterX - centerX) / centerX;
+    const dy = Math.abs(rectCenterY - centerY) / centerY;
+
+    const centerPenalty = (dx + dy) * 0.5;
+
+    // receipt aspect usually ~0.45–0.75
+    const aspectPenalty = Math.abs(aspect - 0.58);
+
+    const score =
+     (coverage * 100)
+     - (centerPenalty * 15)
+     - (aspectPenalty * 25);
+
+    if(score > maxScore){
+     maxScore = score;
+
+     bestQuad = {
+      tl,
+      tr,
+      br,
+      bl,
+      rectWidth: width,
+      rectHeight: height,
+      score
+     };
+    }
   }
  }
 
@@ -485,15 +528,19 @@ function detectReceipt(){
   height:bestQuad.rectHeight
  };
 
-const coverage = (bestQuad.rectWidth * bestQuad.rectHeight) / imgArea;
+ const coverage = (rect.width * rect.height) / imgArea;
 
- if(coverage > 0.2){
-  stableFrames++;
-  detectedRect=rect;
-  detectedQuad=bestQuad;
- }else{
-  stableFrames=Math.max(0,stableFrames-1);
- }
+  if(bestQuad.score > 12){
+     stableFrames = Math.min(stableFrames + 1, 30);
+
+     detectedRect = rect;
+     detectedQuad = bestQuad;
+
+  }else{
+
+    stableFrames = Math.max(stableFrames - 1, 0);
+
+  }
 
  src.delete();
  gray.delete();
@@ -869,6 +916,9 @@ try{
  ctx.fillText("Receipt Detection",22,30);
  ctx.fillText("Stability: "+stableFrames,22,48);
  ctx.fillText("Confidence: "+Math.round(confidence*100)+"%",22,66);
+ if(detectedQuad?.score != null){
+   ctx.fillText("Quad Score: " + detectedQuad.score.toFixed(1),22,84);
+ }
 
  // =============================
  // AUTO CAPTURE
