@@ -464,9 +464,6 @@ function detectReceipt(){
 
    const coverage = area / imgArea;
 
-   // scoring (prefer large + good ratio)
-   const score = coverage * (1 - Math.abs(aspect - 0.5));
-
     // Prefer:
     // - larger receipts
     // - centered receipts
@@ -506,6 +503,13 @@ function detectReceipt(){
      };
     }
   }
+  logScan(
+   "candidate",
+   `area:${area.toFixed(0)}`,
+   `aspect:${aspect.toFixed(2)}`,
+   `score:${score.toFixed(2)}`
+  );
+  approx.delete();
  }
 
  if(!bestQuad){
@@ -530,7 +534,7 @@ function detectReceipt(){
 
  const coverage = (rect.width * rect.height) / imgArea;
 
-  if(bestQuad.score > 12){
+  if(bestQuad.score > 5){
      stableFrames = Math.min(stableFrames + 1, 30);
 
      detectedRect = rect;
@@ -565,7 +569,15 @@ function warpReceipt(){
    return null;
  }
 
- const src = cv.imread(canvasEl);
+ const tempCanvas=document.createElement("canvas");
+ tempCanvas.width=videoEl.videoWidth;
+ tempCanvas.height=videoEl.videoHeight;
+
+ const tempCtx=tempCanvas.getContext("2d");
+ tempCtx.drawImage(videoEl,0,0);
+
+ const src=cv.imread(tempCanvas);
+
  const dsize = new cv.Size(600, 800);
 
  const srcTri = cv.matFromArray(4,1,cv.CV_32FC2,[
@@ -656,6 +668,8 @@ function extractTextRegions(canvas){
  return out;
 }  
 
+let lastOCRTime = 0;
+
 async function runOCR(input){
  if(!input) return;
 
@@ -669,8 +683,12 @@ async function runOCR(input){
    // convert canvas → base64
    const base64 = c.toDataURL("image/jpeg", 0.9);
 
-   // ML Kit OCR
-   const text = await runNativeOCR(base64);
+ if(Date.now() - lastOCRTime > 700){
+    lastOCRTime = Date.now();
+
+    // ML Kit OCR
+    const text = await runNativeOCR(base64);
+ }
 
    if(text){
     combinedText += "\n" + text;
