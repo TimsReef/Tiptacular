@@ -425,91 +425,96 @@ function detectReceipt(){
 
   const peri=cv.arcLength(cnt,true);
   const approx=new cv.Mat();
-  cv.approxPolyDP(cnt,approx,0.03*peri,true);
+  try {
+      cv.approxPolyDP(cnt,approx,0.03*peri,true);
 
-  if(approx.rows===4 && cv.isContourConvex(approx)){
+      if(approx.rows===4 && cv.isContourConvex(approx)){
 
-   // extract points
-   const pts=[];
-   for(let j=0;j<4;j++){
-    pts.push({
-     x:approx.intPtr(j,0)[0],
-     y:approx.intPtr(j,0)[1]
-    });
-   }
+       // extract points
+       const pts=[];
+       for(let j=0;j<4;j++){
+        pts.push({
+         x:approx.intPtr(j,0)[0],
+         y:approx.intPtr(j,0)[1]
+        });
+       }
 
-   // sort
-   pts.sort((a,b)=>a.y-b.y);
-   const top=pts.slice(0,2).sort((a,b)=>a.x-b.x);
-   const bottom=pts.slice(2,4).sort((a,b)=>a.x-b.x);
+       // sort
+       pts.sort((a,b)=>a.y-b.y);
+       const top=pts.slice(0,2).sort((a,b)=>a.x-b.x);
+       const bottom=pts.slice(2,4).sort((a,b)=>a.x-b.x);
 
-   const tl=top[0];
-   const tr=top[1];
-   const bl=bottom[0];
-   const br=bottom[1];
+       const tl=top[0];
+       const tr=top[1];
+       const bl=bottom[0];
+       const br=bottom[1];
 
-   // 🔥 use true edge lengths (fixes skinny box bug)
-   const widthTop = Math.hypot(tr.x-tl.x, tr.y-tl.y);
-   const widthBottom = Math.hypot(br.x-bl.x, br.y-bl.y);
-   const heightLeft = Math.hypot(bl.x-tl.x, bl.y-tl.y);
-   const heightRight = Math.hypot(br.x-tr.x, br.y-tr.y);
+       // 🔥 use true edge lengths (fixes skinny box bug)
+       const widthTop = Math.hypot(tr.x-tl.x, tr.y-tl.y);
+       const widthBottom = Math.hypot(br.x-bl.x, br.y-bl.y);
+       const heightLeft = Math.hypot(bl.x-tl.x, bl.y-tl.y);
+       const heightRight = Math.hypot(br.x-tr.x, br.y-tr.y);
 
-   const width = (widthTop + widthBottom) / 2;
-   const height = (heightLeft + heightRight) / 2;
+       const width = (widthTop + widthBottom) / 2;
+       const height = (heightLeft + heightRight) / 2;
 
-   const aspect = width / height; // receipt ~0.2–0.7 typically
+       const aspect = width / height; // receipt ~0.2–0.7 typically
 
-   // 🔥 reject tall skinny false positives
-   if(aspect < 0.2 || aspect > 1.2) continue;
+       // 🔥 reject tall skinny false positives
+       if(aspect < 0.2 || aspect > 1.2) continue;
 
-   const coverage = area / imgArea;
+       const coverage = area / imgArea;
 
-    // Prefer:
-    // - larger receipts
-    // - centered receipts
-    // - portrait-ish shapes
-    // - stable geometry
+        // Prefer:
+        // - larger receipts
+        // - centered receipts
+        // - portrait-ish shapes
+        // - stable geometry
 
-    const centerX = canvasEl.width / 2;
-    const centerY = canvasEl.height / 2;
+        const centerX = canvasEl.width / 2;
+        const centerY = canvasEl.height / 2;
 
-    const rectCenterX = (tl.x + tr.x + bl.x + br.x) / 4;
-    const rectCenterY = (tl.y + tr.y + bl.y + br.y) / 4;
+        const rectCenterX = (tl.x + tr.x + bl.x + br.x) / 4;
+        const rectCenterY = (tl.y + tr.y + bl.y + br.y) / 4;
 
-    const dx = Math.abs(rectCenterX - centerX) / centerX;
-    const dy = Math.abs(rectCenterY - centerY) / centerY;
+        const dx = Math.abs(rectCenterX - centerX) / centerX;
+        const dy = Math.abs(rectCenterY - centerY) / centerY;
 
-    const centerPenalty = (dx + dy) * 0.5;
+        const centerPenalty = (dx + dy) * 0.5;
 
-    // receipt aspect usually ~0.45–0.75
-    const aspectPenalty = Math.abs(aspect - 0.58);
+        // receipt aspect usually ~0.45–0.75
+        const aspectPenalty = Math.abs(aspect - 0.58);
 
-    const score =
-     (coverage * 100)
-     - (centerPenalty * 15)
-     - (aspectPenalty * 25);
+        const score =
+         (coverage * 100)
+         - (centerPenalty * 15)
+         - (aspectPenalty * 25);
 
-    if(score > maxScore){
-     maxScore = score;
+        logScan(
+         "candidate",
+         `area:${area.toFixed(0)}`,
+         `aspect:${aspect.toFixed(2)}`,
+         `score:${score.toFixed(2)}`
+        );
 
-     bestQuad = {
-      tl,
-      tr,
-      br,
-      bl,
-      rectWidth: width,
-      rectHeight: height,
-      score
-     };
-    }
+        if(score > maxScore){
+         maxScore = score;
+
+         bestQuad = {
+          tl,
+          tr,
+          br,
+          bl,
+          rectWidth: width,
+          rectHeight: height,
+          score
+         };
+        }
+      }
+  } finally {
+
+    approx.delete();
   }
-  logScan(
-   "candidate",
-   `area:${area.toFixed(0)}`,
-   `aspect:${aspect.toFixed(2)}`,
-   `score:${score.toFixed(2)}`
-  );
-  approx.delete();
  }
 
  if(!bestQuad){
@@ -671,42 +676,43 @@ function extractTextRegions(canvas){
 let lastOCRTime = 0;
 
 async function runOCR(input){
- if(!input) return;
+  if(!input) return;
 
- logScan("run_ocr");
+  logScan("run_ocr");
 
- const inputs = Array.isArray(input) ? input : [input];
- let combinedText = "";
+  const inputs = Array.isArray(input) ? input : [input];
+  let combinedText = "";
 
- for(const c of inputs){
-  try{
-   // convert canvas → base64
-   const base64 = c.toDataURL("image/jpeg", 0.9);
+  for(const c of inputs){
+    try{
+      // convert canvas → base64
+      const base64 = c.toDataURL("image/jpeg", 0.9);
 
- if(Date.now() - lastOCRTime > 700){
-    lastOCRTime = Date.now();
+      let text = "";
+      if(Date.now() - lastOCRTime > 700){
+         lastOCRTime = Date.now();
 
-    // ML Kit OCR
-    const text = await runNativeOCR(base64);
- }
+         // ML Kit OCR
+         text = await runNativeOCR(base64);
+      }
 
-   if(text){
-    combinedText += "\n" + text;
-   }
-  }catch(e){
-   console.error("run_ocr", "ML Kit OCR failed", e.toString());
+      if(text){
+        combinedText += "\n" + text;
+      }
+    }catch(e){
+      console.error("run_ocr", "ML Kit OCR failed", e.toString());
+    }
   }
- }
 
- console.log("ML KIT OCR TEXT:", combinedText);
+  console.log("ML KIT OCR TEXT:", combinedText);
 
- const parsed = parseReceipt(combinedText);
+  const parsed = parseReceipt(combinedText);
 
- if(parsed.total){
-  inputRaw = parsed.total.toFixed(2);
-  update();
-  suggestTip(parsed.total);
- }
+  if(parsed.total){
+    inputRaw = parsed.total.toFixed(2);
+    update();
+    suggestTip(parsed.total);
+  }
 }
 
 function parseReceipt(text){
